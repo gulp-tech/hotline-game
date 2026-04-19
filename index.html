@@ -12,36 +12,47 @@ canvas{display:block; image-rendering: pixelated;}
 </head>
 <body>
 <canvas id="game"></canvas>
+
+<!-- Библиотека мультиплеера -->
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
 <script>
-"use strict";
+// --- 1. ВСТАВЬТЕ СЮДА ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД ИГРЫ ---
+// (От "const canvas=..." до самого конца, где вызывается requestAnimationFrame)
+// ВАЖНО: НЕ УДАЛЯЙТЕ ОРИГИНАЛЬНЫЙ КОД! Просто вставьте его здесь.
 
-// --- 1. СЮДА ВСТАВЬТЕ ВЕСЬ ВАШ ИГРОВОЙ JS КОД (все функции, классы, const G, sts и т.д.) ---
-// --- НАЧИНАЯ С "const canvas=..." И ЗАКАНЧИВАЯ ПЕРЕД "requestAnimationFrame(loop)" ---
 
-// ВАЖНО: В конце вашего оригинального кода НЕ ВЫЗЫВАЙТЕ chg('menu') - мы сделаем это ниже.
-
-// --- 2. МУЛЬТИПЛЕЕР ИНТЕГРАЦИЯ ---
+// --- 2. МУЛЬТИПЛЕЕР (ДОБАВЬТЕ ЭТО ПОСЛЕ ВАШЕГО КОДА) ---
 const socket = io('https://hotline-game.onrender.com');
 const otherPlayers = {};
+
 socket.on('updatePlayer', (data) => { otherPlayers[data.id] = data; });
 socket.on('playerLeft', (id) => { delete otherPlayers[id]; });
 
-// --- 3. ОПТИМИЗАЦИЯ РЕЗАЙЗА (ЗАМЕНИТЕ ВАШУ ФУНКЦИЮ RESIZE НА ЭТУ) ---
-function resize(){
-    W = Math.min(window.innerWidth, 1920);
-    H = Math.min(window.innerHeight, 1080);
-    canvas.width=W; canvas.height=H;
+// Отправка координат на сервер
+setInterval(() => {
+  if(typeof G !== 'undefined' && G.pA) {
+    socket.emit('playerMove', {x: G.px, y: G.py, angle: G.pa});
+  }
+}, 50);
+
+// --- 3. ОПТИМИЗАЦИЯ И РИСОВАНИЕ ДРУГИХ ---
+// Найдите функцию sts.game.draw() в вашем коде и внутри неё добавьте этот цикл:
+/*
+for(const id in otherPlayers){
+    const p = otherPlayers[id];
+    CR.draw(p.x-cam[0], p.y-cam[1], p.angle, '#f00', '#fff', '#f00', {mv:0});
+}
+*/
+
+// Функция resize для оптимизации лагов
+window.addEventListener('resize', () => {
+    canvas.width = Math.min(window.innerWidth, 1920);
+    canvas.height = Math.min(window.innerHeight, 1080);
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
-    if(typeof vigC !== 'undefined') vigC = null;
-    if(cur && cur.name === 'menu') sts.menu._mk();
-}
-window.addEventListener('resize',resize);
-
-// --- 4. ЗАПУСК ИГРЫ ---
-// (Скопируйте сюда ваш loop и вызов requestAnimationFrame)
-chg('menu'); 
+});
+resize();
 
 </script>
 </body>
