@@ -8,8 +8,8 @@ app.use(express.static('./'));
 let players = {};
 
 io.on('connection', (socket) => {
-  console.log('Игрок подключился: ' + socket.id);
-  players[socket.id] = { x: 0, y: 0, angle: 0 };
+  console.log('Подключен: ' + socket.id);
+  players[socket.id] = { x: 400, y: 400, angle: 0 };
   
   socket.on('playerMove', (data) => {
     players[socket.id] = data;
