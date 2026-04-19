@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOTLINE HTML - LOBBY</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a050f;color:#fff;font-family:monospace;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;}
+.lobby{text-align:center;width:500px;}
+h1{font-size:48px;color:#f00;text-shadow:0 0 20px #f00;margin-bottom:10px;letter-spacing:4px;}
+h2{font-size:18px;color:#888;margin-bottom:40px;letter-spacing:2px;}
+.status-box{background:#1a0a2a;border:2px solid #333;border-radius:10px;padding:30px;margin-bottom:20px;}
+#status{font-size:22px;color:#0ff;margin-bottom:15px;}
+#countdown{font-size:72px;color:#ff0;font-weight:bold;text-shadow:0 0 30px #ff0;min-height:90px;display:flex;align-items:center;justify-content:center;}
+#countdown.waiting{font-size:32px;color:#666;}
+.players-box{background:#1a0a2a;border:2px solid #333;border-radius:10px;padding:20px;margin-bottom:20px;}
+.players-box h3{color:#f08;margin-bottom:15px;font-size:16px;letter-spacing:2px;}
+#players-list{list-style:none;}
+#players-list li{padding:8px 12px;margin:5px 0;background:#2a1a3a;border-radius:5px;border-left:3px solid #0ff;color:#ddd;font-size:14px;display:flex;align-items:center;gap:10px;}
+#players-list li .dot{width:8px;height:8px;background:#0f0;border-radius:50%;display:inline-block;box-shadow:0 0 6px #0f0;}
+#player-count{font-size:16px;color:#666;margin-top:10px;}
+.btn{display:inline-block;padding:15px 40px;background:#1a0a2a;border:2px solid #0ff;color:#0ff;font-family:monospace;font-size:18px;cursor:pointer;border-radius:5px;letter-spacing:2px;transition:all 0.2s;text-decoration:none;}
+.btn:hover{background:#0ff;color:#000;}
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);}
+.glow{animation:glow 2s infinite alternate;}
+@keyframes glow{from{text-shadow:0 0 10px #f00,0 0 20px #f00;}to{text-shadow:0 0 20px #f00,0 0 40px #f00,0 0 60px #f00;}}
+#message{font-size:14px;color:#666;margin-top:10px;min-height:20px;}
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="lobby">
+  <h1 class="glow">HOTLINE</h1>
+  <h2>ONLINE LOBBY</h2>
+
+  <div class="status-box">
+    <div id="status">Подключение...</div>
+    <div id="countdown" class="waiting">⏳</div>
+    <div id="message"></div>
+  </div>
+
+  <div class="players-box">
+    <h3>🎮 ИГРОКИ В ЛОББИ</h3>
+    <ul id="players-list"></ul>
+    <div id="player-count">Онлайн: 0</div>
+  </div>
+
+  <a href="/index.html" class="btn" id="play-btn">▶ ИГРАТЬ</a>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+const socket = io('https://hotline-game.onrender.com');
+let myId = null;
+let gameStarted = false;
+
+const statusEl = document.getElementById('status');
+const countdownEl = document.getElementById('countdown');
+const playersEl = document.getElementById('players-list');
+const countEl = document.getElementById('player-count');
+const messageEl = document.getElementById('message');
+
+socket.on('connect', () => {
+  console.log('Подключен! ID: ' + socket.id);
+  statusEl.textContent = '✅ Подключен к серверу';
+});
+
+socket.on('disconnect', () => {
+  statusEl.textContent = '❌ Соединение потеряно...';
+  countdownEl.textContent = '⏳';
+  countdownEl.className = 'waiting';
+});
+
+socket.on('yourId', (id) => {
+  myId = id;
+});
+
+socket.on('lobbyState', (state, countdown, players) => {
+  // Обновляем список игроков
+  updatePlayersList(players);
+
+  if (state === 'waiting') {
+    statusEl.textContent = '⏳ Ожидание игроков...';
+    statusEl.style.color = '#888';
+    countdownEl.textContent = 'Нужно минимум 2 игрока';
+    countdownEl.className = 'waiting';
+    messageEl.textContent = 'Поделитесь ссылкой с другом!';
+  } else if (state === 'countdown') {
+    statusEl.textContent = '🚀 Игра начинается!';
+    statusEl.style.color = '#0ff';
+    countdownEl.textContent = countdown;
+    countdownEl.className = '';
+    messageEl.textContent = 'Еще игроки могут присоединиться...';
+  } else if (state === 'playing') {
+    statusEl.textContent = '🎮 ИГРА ИДЕТ!';
+    statusEl.style.color = '#0f0';
+    countdownEl.textContent = 'GO!';
+    messageEl.textContent = 'Переходите в игру!';
+    if (!gameStarted) {
+      gameStarted = true;
+      setTimeout(() => {
+        window.location.href = '/index.html';
+      }, 1500);
+    }
+  }
+});
+
+socket.on('playerJoined', (player) => {
+  console.log('Новый игрок: ' + player.id);
+});
+
+socket.on('playerLeft', (id) => {
+  console.log('Игрок вышел: ' + id);
+});
+
+socket.on('playerCount', (count) => {
+  countEl.textContent = 'Онлайн: ' + count;
+});
+
+socket.on('gameStart', (players) => {
+  if (!gameStarted) {
+    gameStarted = true;
+    countdownEl.textContent = 'GO! 🔥';
+    setTimeout(() => {
+      window.location.href = '/index.html';
+    }, 1500);
+  }
+});
+
+function updatePlayersList(players) {
+  playersEl.innerHTML = '';
+  const ids = Object.keys(players);
+  countEl.textContent = 'Онлайн: ' + ids.length;
+
+  if (ids.length === 0) {
+    playersEl.innerHTML = '<li style="color:#444;border-left-color:#333">Пока никого нет...</li>';
+    return;
+  }
+
+  ids.forEach((id, i) => {
+    const li = document.createElement('li');
+    const isMe = id === myId;
+    li.innerHTML = `<span class="dot"></span> Player ${i + 1} ${isMe ? '<span style="color:#ff0">(ВЫ)</span>' : ''}`;
+    if (isMe) li.style.borderLeftColor = '#ff0';
+    playersEl.appendChild(li);
+  });
+}
+</script>
+</body>
+</html>
