@@ -16,38 +16,49 @@ canvas{display:block; image-rendering: pixelated;}
 <script>
 "use strict";
 
-// 1. ОБЪЯВЛЯЕМ ПЕРЕМЕННЫЕ ПЕРВЫМИ
+// 1. СНАЧАЛА ОБЪЯВЛЯЕМ ПЕРЕМЕННЫЕ
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
 let W, H;
 let cur = null;
 const sts = {};
+let evQ = [];
+const keys = {};
+const mouse = {x: 0, y: 0, btn:[0,0,0]};
 
-// --- ВСТАВЬТЕ СЮДА ВЕСЬ ВАШ ИГРОВОЙ КОД (Классы, Функции, const G) ---
-// (Вставляйте всё от начала игры до самого конца, НО БЕЗ последнего вызова chg и requestAnimationFrame)
+// 2. СЮДА ВСТАВЬТЕ ВЕСЬ ВАШ ИГРОВОЙ КОД (Классы, Функции, const G)
+// ... ВАШ КОД ИГРЫ ...
 
-
-// 2. МУЛЬТИПЛЕЕР
-const socket = io('https://hotline-game.onrender.com');
-const otherPlayers = {};
-socket.on('updatePlayer', (data) => { otherPlayers[data.id] = data; });
-socket.on('playerLeft', (id) => { delete otherPlayers[id]; });
-
-// 3. ОПТИМИЗИРОВАННЫЙ РЕЗАЙЗ
+// 3. ИСПРАВЛЕННАЯ ФУНКЦИЯ RESIZE
 function resize(){
     W = Math.min(window.innerWidth, 1920);
     H = Math.min(window.innerHeight, 1080);
-    canvas.width=W; canvas.height=H;
+    canvas.width = W; 
+    canvas.height = H;
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
     if(typeof vigC !== 'undefined') vigC = null;
     if(cur && cur.name === 'menu') sts.menu._mk();
 }
-window.addEventListener('resize',resize);
+window.addEventListener('resize', resize);
+resize(); // Запускаем один раз сразу после создания canvas
 
-// 4. ЗАПУСК
-resize();
+// 4. МУЛЬТИПЛЕЕР
+const socket = io('https://hotline-game.onrender.com');
+const otherPlayers = {};
+socket.on('updatePlayer', (data) => { otherPlayers[data.id] = data; });
+socket.on('playerLeft', (id) => { delete otherPlayers[id]; });
+
+setInterval(() => {
+  if(typeof G !== 'undefined' && G.pA) {
+    socket.emit('playerMove', {x: G.px, y: G.py, angle: G.pa});
+  }
+}, 50);
+
+// 5. ЗАПУСК
 chg('menu'); 
 
-// 5. ЦИКЛ ИГРЫ
+// 6. ЦИКЛ ИГРЫ (ВАШ ОРИГИНАЛЬНЫЙ LOOP)
 let lastT=performance.now();
 function loop(now){
     const raw=(now-lastT)/1e3; lastT=now;
@@ -55,9 +66,8 @@ function loop(now){
     const ev=[...evQ]; evQ=[];
     if(cur){ cur.handleEvents(ev); cur.update(dt); cur.draw(); }
     
-    // Рисуем других игроков
-    if (typeof G !== 'undefined' && G.pA) {
-        socket.emit('playerMove', {x: G.px, y: G.py, angle: G.pa});
+    // Отрисовка других игроков
+    if (typeof G !== 'undefined' && G.cam) {
         for(const id in otherPlayers){
             const p = otherPlayers[id];
             CR.draw(p.x-G.cam[0], p.y-G.cam[1], p.angle, '#f00', '#fff', '#f00', {mv:0});
@@ -66,6 +76,7 @@ function loop(now){
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+
 </script>
 </body>
 </html>
