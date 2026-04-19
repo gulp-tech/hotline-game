@@ -12,48 +12,60 @@ canvas{display:block; image-rendering: pixelated;}
 </head>
 <body>
 <canvas id="game"></canvas>
-
-<!-- Библиотека мультиплеера -->
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
 <script>
-// --- 1. ВСТАВЬТЕ СЮДА ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД ИГРЫ ---
-// (От "const canvas=..." до самого конца, где вызывается requestAnimationFrame)
-// ВАЖНО: НЕ УДАЛЯЙТЕ ОРИГИНАЛЬНЫЙ КОД! Просто вставьте его здесь.
+"use strict";
+
+// 1. ОБЪЯВЛЯЕМ ПЕРЕМЕННЫЕ ПЕРВЫМИ
+let W, H;
+let cur = null;
+const sts = {};
+
+// --- ВСТАВЬТЕ СЮДА ВЕСЬ ВАШ ИГРОВОЙ КОД (Классы, Функции, const G) ---
+// (Вставляйте всё от начала игры до самого конца, НО БЕЗ последнего вызова chg и requestAnimationFrame)
 
 
-// --- 2. МУЛЬТИПЛЕЕР (ДОБАВЬТЕ ЭТО ПОСЛЕ ВАШЕГО КОДА) ---
+// 2. МУЛЬТИПЛЕЕР
 const socket = io('https://hotline-game.onrender.com');
 const otherPlayers = {};
-
 socket.on('updatePlayer', (data) => { otherPlayers[data.id] = data; });
 socket.on('playerLeft', (id) => { delete otherPlayers[id]; });
 
-// Отправка координат на сервер
-setInterval(() => {
-  if(typeof G !== 'undefined' && G.pA) {
-    socket.emit('playerMove', {x: G.px, y: G.py, angle: G.pa});
-  }
-}, 50);
-
-// --- 3. ОПТИМИЗАЦИЯ И РИСОВАНИЕ ДРУГИХ ---
-// Найдите функцию sts.game.draw() в вашем коде и внутри неё добавьте этот цикл:
-/*
-for(const id in otherPlayers){
-    const p = otherPlayers[id];
-    CR.draw(p.x-cam[0], p.y-cam[1], p.angle, '#f00', '#fff', '#f00', {mv:0});
-}
-*/
-
-// Функция resize для оптимизации лагов
-window.addEventListener('resize', () => {
-    canvas.width = Math.min(window.innerWidth, 1920);
-    canvas.height = Math.min(window.innerHeight, 1080);
+// 3. ОПТИМИЗИРОВАННЫЙ РЕЗАЙЗ
+function resize(){
+    W = Math.min(window.innerWidth, 1920);
+    H = Math.min(window.innerHeight, 1080);
+    canvas.width=W; canvas.height=H;
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
-});
-resize();
+    if(typeof vigC !== 'undefined') vigC = null;
+    if(cur && cur.name === 'menu') sts.menu._mk();
+}
+window.addEventListener('resize',resize);
 
+// 4. ЗАПУСК
+resize();
+chg('menu'); 
+
+// 5. ЦИКЛ ИГРЫ
+let lastT=performance.now();
+function loop(now){
+    const raw=(now-lastT)/1e3; lastT=now;
+    const dt=Math.min(raw,.05);
+    const ev=[...evQ]; evQ=[];
+    if(cur){ cur.handleEvents(ev); cur.update(dt); cur.draw(); }
+    
+    // Рисуем других игроков
+    if (typeof G !== 'undefined' && G.pA) {
+        socket.emit('playerMove', {x: G.px, y: G.py, angle: G.pa});
+        for(const id in otherPlayers){
+            const p = otherPlayers[id];
+            CR.draw(p.x-G.cam[0], p.y-G.cam[1], p.angle, '#f00', '#fff', '#f00', {mv:0});
+        }
+    }
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
