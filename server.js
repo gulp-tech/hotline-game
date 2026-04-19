@@ -414,4 +414,213 @@ io.on('connection', (socket) => {
     team: null
   };
 
-  
+  // Отправить список лобби
+  socket.emit('lobbyList', Object.values(lobbies).map(l => ({
+    id: l.id, name: l.name, mode: l.mode, state: l.state,
+    playerCount: Object.keys(l.players).length,
+    maxPlayers: l.maxPlayers, wave: l.wave
+  })));
+
+  // Установить имя
+  socket.on('setName', (name) => {
+    if (players[socket.id]) {
+      players[socket.id].name = (name || 'Player').substring(0, 15);
+    }
+  });
+
+  // Войти в лобби
+  socket.on('joinLobby', (lobbyId) => {
+    const lobby = lobbies[lobbyId];
+    const player = players[socket.id];
+    if (!lobby || !player) return;
+
+    // Покинуть текущее лобби
+    if (player.lobbyId) {
+      leaveCurrentLobby(socket);
+    }
+
+    player.lobbyId = lobbyId;
+    socket.join(lobbyId);
+
+    if (lobby.state === LOBBY_STATES.PLAYING) {
+      // Стать спектатором
+      lobby.spectators[socket.id] = player;
+      socket.emit('becameSpectator');
+      socket.emit('gameStarted', {
+        mode: lobby.mode,
+        players: lobby.players,
+        wave: lobby.wave
+      });
+    } else {
+      // Войти как игрок
+      player.x = 100 + Object.keys(lobby.players).length * 80;
+      player.y = 300;
+      player.health = 100;
+      player.isDead = false;
+      lobby.players[socket.id] = player;
+
+      socket.emit('joinedLobby', {
+        lobbyId,
+        lobby: {
+          mode: lobby.mode,
+          state: lobby.state,
+          players: lobby.players
+        },
+        myId: socket.id
+      });
+
+      socket.to(lobbyId).emit('playerJoined', player);
+
+      // Начать отсчёт если >= 2 игроков
+      if (Object.keys(lobby.players).length >= lobby.minToStart &&
+          lobby.state === LOBBY_STATES.WAITING) {
+        startCountdown(lobbyId);
+      }
+    }
+
+    broadcastLobbyList();
+  });
+
+  // Покинуть лобби
+  socket.on('leaveLobby', () => leaveCurrentLobby(socket));
+
+  // Движение
+  socket.on('move', (data) => {
+    const player = players[socket.id];
+    if (!player || !player.lobbyId) return;
+    const lobby = lobbies[player.lobbyId];
+    if (!lobby || lobby.state !== LOBBY_STATES.PLAYING) return;
+    if (player.isDead) return;
+
+    player.x = Math.max(20, Math.min(880, data.x));
+    player.y = Math.max(20, Math.min(580, data.y));
+    player.angle = data.angle;
+
+    socket.to(player.lobbyId).emit('playerMoved', {
+      id: socket.id,
+      x: player.x, y: player.y,
+      angle: player.angle
+    });
+  });
+
+  // Выстрел
+  socket.on('shoot', (data) => {
+    const player = players[socket.id];
+    if (!player || !player.lobbyId) return;
+    const lobby = lobbies[player.lobbyId];
+    if (!lobby || lobby.state !== LOBBY_STATES.PLAYING) return;
+    if (player.isDead) return;
+
+    const bullet = {
+      id: `${socket.id}_${Date.now()}`,
+      ownerId: socket.id,
+      ownerName: player.name,
+      ownerTeam: player.team,
+      isBot: false,
+      x: data.x, y: data.y,
+      angle: data.angle,
+      speed: 10
+    };
+
+    lobby.bullets.push({
+      ...bullet,
+      velX: Math.cos(bullet.angle) * bullet.speed,
+      velY: Math.sin(bullet.angle) * bullet.speed,
+      life: 80
+    });
+
+    io.to(player.lobbyId).emit('bulletCreated', bullet);
+  });
+
+  // Попадание игрок → игрок (для deathmatch/team)
+  socket.on('hitPlayer', (data) => {
+    const player = players[socket.id];
+    if (!player || !player.lobbyId) return;
+    const lobby = lobbies[player.lobbyId];
+    if (!lobby || lobby.state !== LOBBY_STATES.PLAYING) return;
+
+    const target = lobby.players[data.targetId];
+    if (!target || target.isDead) return;
+
+    // Team mode: нельзя бить своих
+    if (lobby.mode === GAME_MODES.TEAM && target.team === player.team) return;
+
+    target.health -= 25;
+    if (target.health <= 0) {
+      target.health = 0;
+      target.isDead = true;
+      player.score = (player.score || 0) + 1;
+
+      io.to(player.lobbyId).emit('playerDied', {
+        deadId: target.id,
+        killerId: socket.id,
+        killerName: player.name
+      });
+      io.to(player.lobbyId).emit('updateScore', { id: socket.id, score: player.score });
+
+      // Respawn через 3 сек (только deathmatch/team)
+      if (lobby.mode !== GAME_MODES.SURVIVAL) {
+        setTimeout(() => {
+          if (!lobbies[player.lobbyId] || lobby.state !== LOBBY_STATES.PLAYING) return;
+          target.health = 100;
+          target.isDead = false;
+          target.x = Math.random() * 700 + 100;
+          target.y = Math.random() * 400 + 100;
+          io.to(player.lobbyId).emit('playerRespawned', {
+            id: target.id,
+            x: target.x, y: target.y
+          });
+        }, 3000);
+      } else {
+        checkSurvivalEnd(player.lobbyId);
+      }
+
+      // Проверить победу в team
+      if (lobby.mode === GAME_MODES.TEAM) {
+        checkTeamEnd(player.lobbyId);
+      }
+    } else {
+      io.to(player.lobbyId).emit('playerHurt', { id: target.id, health: target.health });
+    }
+  });
+
+  function checkTeamEnd(lobbyId) {
+    const lobby = lobbies[lobbyId];
+    const redAlive = Object.values(lobby.players).filter(p => p.team === 'red' && !p.isDead).length;
+    const blueAlive = Object.values(lobby.players).filter(p => p.team === 'blue' && !p.isDead).length;
+    if (redAlive === 0) endGame(lobbyId, '🔵 Синяя команда победила!');
+    if (blueAlive === 0) endGame(lobbyId, '🔴 Красная команда победила!');
+  }
+
+  socket.on('disconnect', () => {
+    console.log(`❌ Отключился: ${socket.id}`);
+    leaveCurrentLobby(socket);
+    delete players[socket.id];
+    broadcastLobbyList();
+  });
+
+  function leaveCurrentLobby(socket) {
+    const player = players[socket.id];
+    if (!player || !player.lobbyId) return;
+    const lobbyId = player.lobbyId;
+    const lobby = lobbies[lobbyId];
+    if (lobby) {
+      delete lobby.players[socket.id];
+      delete lobby.spectators[socket.id];
+      socket.to(lobbyId).emit('playerLeft', socket.id);
+      // Отменить отсчёт если стало мало игроков
+      if (lobby.state === LOBBY_STATES.COUNTDOWN &&
+          Object.keys(lobby.players).length < lobby.minToStart) {
+        clearInterval(lobby.countdownTimer);
+        lobby.state = LOBBY_STATES.WAITING;
+        io.to(lobbyId).emit('countdownCancelled');
+      }
+    }
+    socket.leave(lobbyId);
+    player.lobbyId = null;
+    broadcastLobbyList();
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`🚀 Сервер на порту ${PORT}`));
