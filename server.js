@@ -8,14 +8,11 @@ app.use(express.static('./'));
 let players = {};
 
 io.on('connection', (socket) => {
-  console.log('Подключен: ' + socket.id);
-  players[socket.id] = { x: 400, y: 400, angle: 0 };
-  
+  players[socket.id] = { x: 0, y: 0, angle: 0 };
   socket.on('playerMove', (data) => {
     players[socket.id] = data;
     socket.broadcast.emit('updatePlayer', { id: socket.id, ...data });
   });
-
   socket.on('disconnect', () => {
     delete players[socket.id];
     io.emit('playerLeft', socket.id);
