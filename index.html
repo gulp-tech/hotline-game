@@ -1,53 +1,612 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HOTLINE HTML</title>
-<style>
-    body { background:#000; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; width:100vw; }
-    canvas { display:block; image-rendering: pixelated; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔥 Hotline Game</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    #ui {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      z-index: 100;
+    }
+
+    #healthBar {
+      background: #333;
+      border: 2px solid #ff4444;
+      border-radius: 10px;
+      width: 200px;
+      height: 20px;
+      overflow: hidden;
+    }
+
+    #healthFill {
+      background: linear-gradient(90deg, #ff4444, #ff8800);
+      height: 100%;
+      width: 100%;
+      transition: width 0.3s;
+    }
+
+    #scoreBoard {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px;
+      color: white;
+      font-size: 13px;
+      min-width: 150px;
+      z-index: 100;
+    }
+
+    #scoreBoard h3 {
+      color: #ff8800;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    .score-entry {
+      padding: 2px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    #playerCount {
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    #killFeed {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      z-index: 100;
+    }
+
+    .killMsg {
+      background: rgba(0,0,0,0.6);
+      color: #ff4444;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+      font-size: 12px;
+      animation: fadeOut 3s forwards;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    #nameInput {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.95);
+      border: 2px solid #ff8800;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      z-index: 1000;
+      color: white;
+    }
+
+    #nameInput h2 {
+      color: #ff8800;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    #nameInput input {
+      background: #333;
+      border: 1px solid #666;
+      border-radius: 6px;
+      color: white;
+      padding: 8px 12px;
+      font-size: 16px;
+      width: 200px;
+      margin-bottom: 15px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #nameInput button {
+      background: #ff8800;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      padding: 10px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #nameInput button:hover {
+      background: #ff6600;
+    }
+
+    canvas {
+      border: 2px solid #333;
+      border-radius: 8px;
+      cursor: crosshair;
+    }
+
+    #controls {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.6);
+      color: #aaa;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      z-index: 100;
+    }
+  </style>
 </head>
 <body>
-<canvas id="game"></canvas>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
+<!-- Экран ввода имени -->
+<div id="nameInput">
+  <h2>🔥 HOTLINE GAME</h2>
+  <p style="color:#aaa; margin-bottom:15px;">Введи своё имя</p>
+  <input type="text" id="nameField" placeholder="Твоё имя..." maxlength="15">
+  <button onclick="startGame()">ИГРАТЬ</button>
+</div>
+
+<!-- UI -->
+<div id="ui" style="display:none">
+  <div id="healthBar"><div id="healthFill"></div></div>
+  <span id="playerCount" style="color:white">👥 0</span>
+  <span style="color:#ff8800; font-size:14px">💀 <span id="myScore">0</span></span>
+</div>
+
+<!-- Таблица счёта -->
+<div id="scoreBoard" style="display:none">
+  <h3>🏆 Счёт</h3>
+  <div id="scoreList"></div>
+</div>
+
+<!-- Лента убийств -->
+<div id="killFeed"></div>
+
+<!-- Управление -->
+<div id="controls">
+  WASD / Стрелки - движение<br>
+  Мышь - прицел<br>
+  ЛКМ - стрельба
+</div>
+
+<!-- Игровой холст -->
+<canvas id="gameCanvas" width="900" height="600"></canvas>
+
+<script src="/socket.io/socket.io.js"></script>
 <script>
-// Ждем полной загрузки страницы, чтобы canvas точно существовал
-window.onload = function() {
-    
-    // --- 1. СЮДА ВСТАВЬТЕ ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД (ВЕСЬ JS) ---
-    // (начиная с const canvas=... и до конца)
-    // ВАЖНО: Уберите оттуда вызов chg('menu') и requestAnimationFrame(loop) 
-    // если они там есть, мы вызовем их ниже.
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    // --- 2. МУЛЬТИПЛЕЕР (ДОБАВИТЬ ВНИЗУ) ---
-    const socket = io('https://hotline-game.onrender.com');
-    const otherPlayers = {};
-    socket.on('updatePlayer', (data) => { otherPlayers[data.id] = data; });
-    socket.on('playerLeft', (id) => { delete otherPlayers[id]; });
+let socket;
+let myId = null;
+let players = {};
+let bullets = [];
+let keys = {};
+let mouseX = 0, mouseY = 0;
+let myHealth = 100;
+let lastShot = 0;
+const SHOOT_COOLDOWN = 300;
 
-    setInterval(() => {
-        if(typeof G !== 'undefined' && G.pA) {
-            socket.emit('playerMove', {x: G.px, y: G.py, angle: G.pa});
-        }
-    }, 50);
+// Частицы
+let particles = [];
 
-    // --- 3. ФУНКЦИЯ ОПТИМИЗАЦИИ (ВМЕСТО ВАШЕЙ) ---
-    window.addEventListener('resize', () => {
-        let W = Math.min(window.innerWidth, 1920);
-        let H = Math.min(window.innerHeight, 1080);
-        canvas.width = W; canvas.height = H;
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
-        if(cur && cur.name === 'menu') sts.menu._mk();
+// Карта - стены
+const walls = [
+  { x: 100, y: 100, w: 20, h: 150 },
+  { x: 300, y: 200, w: 150, h: 20 },
+  { x: 600, y: 100, w: 20, h: 200 },
+  { x: 200, y: 400, w: 200, h: 20 },
+  { x: 650, y: 350, w: 20, h: 200 },
+  { x: 400, y: 300, w: 20, h: 120 },
+];
+
+function startGame() {
+  const name = document.getElementById('nameField').value.trim() || 'Anonymous';
+  document.getElementById('nameInput').style.display = 'none';
+  document.getElementById('ui').style.display = 'flex';
+  document.getElementById('scoreBoard').style.display = 'block';
+
+  socket = io();
+
+  socket.on('init', (data) => {
+    myId = data.myId;
+    players = data.players;
+    socket.emit('setName', name);
+    gameLoop();
+  });
+
+  socket.on('playerJoined', (player) => {
+    players[player.id] = player;
+    updateScoreBoard();
+  });
+
+  socket.on('playerMoved', (data) => {
+    if (players[data.id]) {
+      players[data.id].x = data.x;
+      players[data.id].y = data.y;
+      players[data.id].angle = data.angle;
+    }
+  });
+
+  socket.on('playerLeft', (id) => {
+    delete players[id];
+    updateScoreBoard();
+  });
+
+  socket.on('bulletCreated', (bullet) => {
+    bullets.push({
+      ...bullet,
+      velX: Math.cos(bullet.angle) * bullet.speed,
+      velY: Math.sin(bullet.angle) * bullet.speed,
+      life: 60
     });
+  });
 
-    // --- 4. ЗАПУСК ---
-    chg('menu');
-    requestAnimationFrame(loop);
-};
+  socket.on('playerDied', (data) => {
+    if (data.deadId === myId) {
+      myHealth = 100;
+      updateHealth();
+    }
+    if (players[data.deadId]) {
+      players[data.deadId].x = data.respawnX;
+      players[data.deadId].y = data.respawnY;
+      players[data.deadId].health = 100;
+    }
+    addKillFeed(
+      players[data.killerId]?.name || '???',
+      players[data.deadId]?.name || '???'
+    );
+    spawnParticles(data.respawnX, data.respawnY, '#ff4444', 20);
+  });
+
+  socket.on('playerHurt', (data) => {
+    if (data.id === myId) {
+      myHealth = data.health;
+      updateHealth();
+    }
+    if (players[data.id]) {
+      players[data.id].health = data.health;
+    }
+  });
+
+  socket.on('updateScore', (data) => {
+    if (players[data.id]) {
+      players[data.id].score = data.score;
+      if (data.id === myId) {
+        document.getElementById('myScore').textContent = data.score;
+      }
+      updateScoreBoard();
+    }
+  });
+
+  socket.on('nameUpdated', (data) => {
+    if (players[data.id]) {
+      players[data.id].name = data.name;
+      updateScoreBoard();
+    }
+  });
+}
+
+// Управление
+document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+});
+
+canvas.addEventListener('click', () => {
+  if (!myId || !players[myId]) return;
+  const now = Date.now();
+  if (now - lastShot < SHOOT_COOLDOWN) return;
+  lastShot = now;
+
+  const me = players[myId];
+  const angle = Math.atan2(mouseY - me.y, mouseX - me.x);
+  socket.emit('shoot', { x: me.x, y: me.y, angle });
+});
+
+function updateHealth() {
+  document.getElementById('healthFill').style.width = myHealth + '%';
+}
+
+function updateScoreBoard() {
+  const list = document.getElementById('scoreList');
+  const sorted = Object.values(players).sort((a, b) => (b.score || 0) - (a.score || 0));
+  list.innerHTML = sorted.map(p =>
+    `<div class="score-entry" style="color:${p.color || 'white'}">
+      ${p.id === myId ? '▶ ' : ''}${p.name || 'Player'}: ${p.score || 0}
+    </div>`
+  ).join('');
+  document.getElementById('playerCount').textContent = `👥 ${Object.keys(players).length}`;
+}
+
+function addKillFeed(killer, victim) {
+  const feed = document.getElementById('killFeed');
+  const msg = document.createElement('div');
+  msg.className = 'killMsg';
+  msg.textContent = `💀 ${killer} убил ${victim}`;
+  feed.appendChild(msg);
+  setTimeout(() => msg.remove(), 3000);
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x, y, color,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      life: 40,
+      maxLife: 40,
+      size: Math.random() * 5 + 2
+    });
+  }
+}
+
+// Проверка коллизии пули со стенами
+function bulletHitsWall(bullet) {
+  for (const w of walls) {
+    if (bullet.x > w.x && bullet.x < w.x + w.w &&
+        bullet.y > w.y && bullet.y < w.y + w.h) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Отрисовка игрока
+function drawPlayer(player, isMe) {
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.rotate(player.angle);
+
+  // Тело
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.fillStyle = player.color || '#4af';
+  ctx.fill();
+  ctx.strokeStyle = isMe ? '#fff' : '#333';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Оружие
+  ctx.fillStyle = '#666';
+  ctx.fillRect(8, -4, 20, 8);
+  ctx.fillStyle = '#888';
+  ctx.fillRect(22, -3, 8, 6);
+
+  ctx.restore();
+
+  // Имя
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 12px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText(player.name || 'Player', player.x, player.y - 28);
+
+  // Полоска HP
+  const barW = 40;
+  const barX = player.x - barW / 2;
+  const barY = player.y - 22;
+  ctx.fillStyle = '#333';
+  ctx.fillRect(barX, barY, barW, 5);
+  ctx.fillStyle = player.health > 50 ? '#44ff44' : '#ff4444';
+  ctx.fillRect(barX, barY, barW * ((player.health || 100) / 100), 5);
+}
+
+// Игровой цикл
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  if (!myId || !players[myId]) return;
+
+  const me = players[myId];
+  const speed = 3;
+  let moved = false;
+
+  let nx = me.x, ny = me.y;
+
+  if (keys['w'] || keys['W'] || keys['ArrowUp']) { ny -= speed; moved = true; }
+  if (keys['s'] || keys['S'] || keys['ArrowDown']) { ny += speed; moved = true; }
+  if (keys['a'] || keys['A'] || keys['ArrowLeft']) { nx -= speed; moved = true; }
+  if (keys['d'] || keys['D'] || keys['ArrowRight']) { nx += speed; moved = true; }
+
+  // Границы
+  nx = Math.max(20, Math.min(canvas.width - 20, nx));
+  ny = Math.max(20, Math.min(canvas.height - 20, ny));
+
+  // Проверка стен
+  let blocked = false;
+  for (const w of walls) {
+    if (nx > w.x - 20 && nx < w.x + w.w + 20 &&
+        ny > w.y - 20 && ny < w.y + w.h + 20) {
+      blocked = true;
+      break;
+    }
+  }
+
+  if (!blocked) {
+    me.x = nx;
+    me.y = ny;
+  }
+
+  const angle = Math.atan2(mouseY - me.y, mouseX - me.x);
+  me.angle = angle;
+
+  if (moved || true) {
+    socket.emit('move', { x: me.x, y: me.y, angle });
+  }
+
+  // Обновление пуль
+  bullets = bullets.filter(b => {
+    b.x += b.velX;
+    b.y += b.velY;
+    b.life--;
+
+    if (bulletHitsWall(b)) {
+      spawnParticles(b.x, b.y, '#ff8800', 5);
+      return false;
+    }
+
+    if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) return false;
+    if (b.life <= 0) return false;
+
+    // Проверка попадания в игроков
+    if (b.ownerId !== myId) {
+      if (players[myId]) {
+        const dx = b.x - players[myId].x;
+        const dy = b.y - players[myId].y;
+        if (Math.sqrt(dx*dx + dy*dy) < 20) {
+          socket.emit('hit', { targetId: myId });
+          spawnParticles(b.x, b.y, '#ff0000', 10);
+          return false;
+        }
+      }
+    } else {
+      // Наши пули проверяем по другим игрокам
+      for (const id in players) {
+        if (id === myId) continue;
+        const p = players[id];
+        const dx = b.x - p.x;
+        const dy = b.y - p.y;
+        if (Math.sqrt(dx*dx + dy*dy) < 20) {
+          socket.emit('hit', { targetId: id });
+          spawnParticles(b.x, b.y, '#ff4400', 10);
+          return false;
+        }
+      }
+    }
+
+    return true;
+  });
+
+  // Частицы
+  particles = particles.filter(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.9;
+    p.vy *= 0.9;
+    p.life--;
+    return p.life > 0;
+  });
+}
+
+function draw() {
+  // Фон
+  ctx.fillStyle = '#16213e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Сетка
+  ctx.strokeStyle = '#1e2d4a';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 50) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += 50) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+
+  // Стены
+  walls.forEach(w => {
+    ctx.fillStyle = '#2a4060';
+    ctx.fillRect(w.x, w.y, w.w, w.h);
+    ctx.strokeStyle = '#3a5080';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(w.x, w.y, w.w, w.h);
+  });
+
+  // Игроки
+  Object.values(players).forEach(p => {
+    if (!p) return;
+    drawPlayer(p, p.id === myId);
+  });
+
+  // Пули
+  bullets.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffcc00';
+    ctx.fill();
+    // Трейл
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - b.velX * 5, b.y - b.velY * 5);
+    ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // Частицы
+  particles.forEach(p => {
+    const alpha = p.life / p.maxLife;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // Если не подключён
+  if (!myId) {
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ff8800';
+    ctx.font = 'bold 30px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('Подключение...', canvas.width/2, canvas.height/2);
+  }
+}
+
+// Enter для начала
+document.getElementById('nameField').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') startGame();
+});
 </script>
 </body>
 </html>
