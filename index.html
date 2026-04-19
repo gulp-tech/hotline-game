@@ -16,9 +16,7 @@
   --text: #e0e0ff;
   --muted: #666699;
 }
-
 * { margin:0; padding:0; box-sizing:border-box; }
-
 body {
   background: var(--bg);
   color: var(--text);
@@ -28,759 +26,681 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  user-select: none;
 }
-
-/* ===== ЭКРАНЫ ===== */
 .screen { display:none; width:100%; height:100vh; }
 .screen.active { display:flex; }
 
-/* ===== ГЛАВНОЕ МЕНЮ ===== */
+/* ===== МЕНЮ ===== */
 #menuScreen {
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: radial-gradient(ellipse at center, #1a0a2e 0%, #0d0d1a 70%);
 }
-
 .logo {
-  font-size: 64px;
-  font-weight: bold;
-  letter-spacing: 8px;
-  background: linear-gradient(135deg, #ff6600, #ff3366, #ff6600);
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: 10px;
+  background: linear-gradient(135deg, #ff6600 0%, #ff3366 50%, #ff6600 100%);
   background-size: 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gradShift 3s ease infinite;
-  text-shadow: none;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 0 20px rgba(255,102,0,0.5));
 }
-
 .logo-sub {
   color: var(--muted);
-  font-size: 14px;
-  letter-spacing: 4px;
+  font-size: 13px;
+  letter-spacing: 6px;
   margin-bottom: 50px;
+  text-transform: uppercase;
 }
-
 @keyframes gradShift {
   0%,100% { background-position: 0% }
   50% { background-position: 100% }
 }
-
 .menu-box {
-  background: var(--panel);
+  background: rgba(19,19,42,0.95);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 40px;
   width: 420px;
-  box-shadow: 0 0 60px rgba(255,102,0,0.15);
+  box-shadow: 0 0 80px rgba(255,102,0,0.15), inset 0 1px 0 rgba(255,255,255,0.05);
 }
-
-.input-group {
-  margin-bottom: 20px;
-}
-
+.input-group { margin-bottom: 20px; }
 .input-group label {
   display: block;
   color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 2px;
+  font-size: 11px;
+  letter-spacing: 3px;
   margin-bottom: 8px;
+  text-transform: uppercase;
 }
-
 .input-group input {
   width: 100%;
-  background: #1a1a35;
+  background: rgba(26,26,53,0.8);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  padding: 12px 16px;
+  border-radius: 10px;
+  color: #ffffff;
+  padding: 14px 18px;
   font-size: 16px;
-  font-family: inherit;
+  font-family: 'Courier New', monospace;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  caret-color: var(--accent);
+  -webkit-text-fill-color: #ffffff;
 }
-
-.input-group input:focus { border-color: var(--accent); }
-
+.input-group input:focus {
+  border-color: var(--accent);
+  background: rgba(30,20,50,0.9);
+  box-shadow: 0 0 0 3px rgba(255,102,0,0.15);
+}
+.input-group input::placeholder { color: #444466; }
 .btn {
   width: 100%;
-  padding: 14px;
+  padding: 15px;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: bold;
-  font-family: inherit;
+  font-family: 'Courier New', monospace;
   cursor: pointer;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   transition: all 0.2s;
+  text-transform: uppercase;
 }
-
 .btn-primary {
   background: linear-gradient(135deg, #ff6600, #ff3366);
   color: white;
+  box-shadow: 0 4px 20px rgba(255,102,0,0.3);
 }
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(255,102,0,0.5); }
+.btn-primary:active { transform: translateY(-1px); }
+.btn-secondary {
+  background: rgba(42,42,90,0.6);
+  color: var(--muted);
+  margin-top: 10px;
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: rgba(60,60,100,0.8); color: var(--text); }
 
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,102,0,0.4); }
-.btn-secondary { background: var(--border); color: var(--text); margin-top: 10px; }
-.btn-secondary:hover { background: #3a3a6a; }
-
-/* ===== ВЫБОР ЛОББИ ===== */
+/* ===== ЛОББИ ===== */
 #lobbyScreen {
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   padding: 30px;
-  background: radial-gradient(ellipse at top, #1a0a2e 0%, #0d0d1a 60%);
+  background: radial-gradient(ellipse at top, #150a2e 0%, #0d0d1a 60%);
+  overflow-y: auto;
 }
-
-.lobby-header {
-  text-align: center;
-  margin-bottom: 30px;
-  width: 100%;
-}
-
-.lobby-header h1 { font-size: 32px; color: var(--accent); }
-.lobby-header p { color: var(--muted); margin-top: 5px; }
-
+.lobby-header { text-align: center; margin-bottom: 30px; }
+.lobby-header h1 { font-size: 28px; color: var(--accent); letter-spacing: 4px; }
+.lobby-header p { color: var(--muted); margin-top: 6px; font-size: 13px; }
 .lobby-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
   width: 100%;
-  max-width: 1000px;
+  max-width: 960px;
   margin-bottom: 20px;
 }
-
 .lobby-card {
-  background: var(--panel);
+  background: rgba(19,19,42,0.9);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 14px;
+  padding: 22px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
   position: relative;
   overflow: hidden;
 }
-
 .lobby-card:hover {
   border-color: var(--accent);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(255,102,0,0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(255,102,0,0.2);
 }
-
 .lobby-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0;
-  width: 4px; height: 100%;
+  width: 100%; height: 3px;
   background: var(--mode-color, var(--accent));
 }
-
 .lobby-card.deathmatch { --mode-color: #ff3366; }
-.lobby-card.survival { --mode-color: #33ff99; }
-.lobby-card.team { --mode-color: #3399ff; }
-
-.lobby-card-title {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.lobby-card-info {
-  color: var(--muted);
-  font-size: 13px;
-  display: flex;
-  gap: 16px;
-}
-
+.lobby-card.survival   { --mode-color: #33ff99; }
+.lobby-card.team       { --mode-color: #3399ff; }
+.lobby-card-title { font-size: 17px; font-weight: bold; margin-bottom: 8px; margin-top: 6px; }
+.lobby-card-info { color: var(--muted); font-size: 13px; display: flex; gap: 16px; }
 .lobby-card-state {
-  position: absolute;
-  top: 15px; right: 15px;
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-weight: bold;
-  letter-spacing: 1px;
+  position: absolute; top: 16px; right: 14px;
+  font-size: 10px; padding: 3px 9px; border-radius: 20px;
+  font-weight: bold; letter-spacing: 1px;
 }
-
-.state-waiting { background: #2a4a2a; color: var(--green); }
-.state-countdown { background: #4a4a1a; color: #ffcc00; }
-.state-playing { background: #4a1a1a; color: #ff4444; }
-.state-ended { background: #2a2a2a; color: var(--muted); }
-
+.state-waiting   { background: rgba(51,255,153,0.1); color: var(--green); border: 1px solid rgba(51,255,153,0.3); }
+.state-countdown { background: rgba(255,204,0,0.1);  color: #ffcc00; border: 1px solid rgba(255,204,0,0.3); }
+.state-playing   { background: rgba(255,68,68,0.1);  color: #ff4444; border: 1px solid rgba(255,68,68,0.3); }
+.state-ended     { background: rgba(100,100,100,0.1); color: var(--muted); border: 1px solid rgba(100,100,100,0.3); }
 .mode-badge {
-  display: inline-block;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin-bottom: 10px;
+  display: inline-block; font-size: 10px; padding: 2px 8px;
+  border-radius: 4px; margin-bottom: 8px; letter-spacing: 1px;
 }
+.badge-deathmatch { background: rgba(255,51,102,0.15); color: #ff3366; border: 1px solid rgba(255,51,102,0.3); }
+.badge-survival   { background: rgba(51,255,153,0.15); color: var(--green); border: 1px solid rgba(51,255,153,0.3); }
+.badge-team       { background: rgba(51,153,255,0.15); color: var(--blue); border: 1px solid rgba(51,153,255,0.3); }
 
-.badge-deathmatch { background: rgba(255,51,102,0.2); color: #ff3366; }
-.badge-survival { background: rgba(51,255,153,0.2); color: var(--green); }
-.badge-team { background: rgba(51,153,255,0.2); color: var(--blue); }
-
-/* ===== ОЖИДАНИЕ В ЛОББИ ===== */
+/* ===== ОЖИДАНИЕ ===== */
 #waitScreen {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column; align-items: center; justify-content: center;
   background: radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d1a 70%);
 }
-
 .wait-box {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 40px;
-  width: 500px;
-  text-align: center;
-}
-
-.wait-title { font-size: 24px; color: var(--accent); margin-bottom: 5px; }
-.wait-sub { color: var(--muted); font-size: 13px; margin-bottom: 30px; }
-
-.countdown-circle {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 4px solid var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-  font-size: 48px;
-  font-weight: bold;
-  color: var(--accent);
-  box-shadow: 0 0 30px rgba(255,102,0,0.4);
-  animation: pulse 1s ease infinite;
-}
-
-@keyframes pulse {
-  0%,100% { box-shadow: 0 0 20px rgba(255,102,0,0.4); }
-  50% { box-shadow: 0 0 40px rgba(255,102,0,0.8); }
-}
-
-.waiting-msg {
-  color: var(--muted);
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
-.players-in-lobby {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 25px;
-}
-
-.player-chip {
-  background: #1a1a35;
+  background: rgba(19,19,42,0.95);
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 13px;
-  color: var(--text);
+  padding: 44px; width: 520px; text-align: center;
+  box-shadow: 0 0 60px rgba(0,0,0,0.5);
+}
+.wait-title { font-size: 22px; color: var(--accent); margin-bottom: 4px; }
+.wait-sub   { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+.countdown-circle {
+  width: 130px; height: 130px; border-radius: 50%;
+  border: 3px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px;
+  font-size: 54px; font-weight: bold; color: var(--accent);
+  box-shadow: 0 0 40px rgba(255,102,0,0.5), inset 0 0 30px rgba(255,102,0,0.1);
+  animation: pulsate 1s ease infinite;
+}
+@keyframes pulsate {
+  0%,100% { box-shadow: 0 0 20px rgba(255,102,0,0.4), inset 0 0 20px rgba(255,102,0,0.05); }
+  50%      { box-shadow: 0 0 50px rgba(255,102,0,0.9), inset 0 0 30px rgba(255,102,0,0.15); }
+}
+.players-in-lobby {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; margin: 16px 0 24px;
+}
+.player-chip {
+  background: rgba(26,26,53,0.8);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 6px 14px;
+  font-size: 13px; color: var(--text);
 }
 
-/* ===== ИГРОВОЙ ЭКРАН ===== */
+/* ===== ИГРА ===== */
 #gameScreen {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #0d0d1a;
-  position: relative;
+  flex-direction: column; align-items: center; justify-content: center;
+  background: #080810; position: relative;
 }
-
-#gameCanvas {
-  border: 2px solid var(--border);
-  border-radius: 8px;
-  cursor: crosshair;
-  display: block;
-}
+#gameCanvas { display: block; cursor: crosshair; border-radius: 6px; }
 
 /* HUD */
 #hud {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(8px);
-  z-index: 100;
-  border-bottom: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 20px;
+  background: rgba(8,8,20,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(42,42,90,0.8);
+  z-index: 100; height: 48px;
 }
-
-.hud-section { display: flex; align-items: center; gap: 16px; }
-
-.health-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.hud-left, .hud-center, .hud-right {
+  display: flex; align-items: center; gap: 14px;
 }
+.hud-center { flex: 1; justify-content: center; }
+.hud-right  { justify-content: flex-end; }
 
-.health-bar-wrap span { color: #ff4444; font-size: 18px; }
-
+.hp-wrap { display: flex; align-items: center; gap: 8px; }
+.hp-icon { font-size: 16px; }
 #healthBar {
-  background: #1a1a35;
-  border: 1px solid #ff4444;
-  border-radius: 10px;
-  width: 160px;
-  height: 16px;
-  overflow: hidden;
+  background: rgba(26,26,53,0.8);
+  border: 1px solid rgba(255,68,68,0.4);
+  border-radius: 8px; width: 140px; height: 14px; overflow: hidden;
 }
-
 #healthFill {
-  background: linear-gradient(90deg, #ff4444, #ff8800);
   height: 100%;
-  transition: width 0.3s;
-}
-
-.hud-stat {
-  background: #1a1a35;
-  border: 1px solid var(--border);
+  background: linear-gradient(90deg, #ff2244, #ff6600);
+  transition: width 0.2s ease;
   border-radius: 8px;
-  padding: 4px 12px;
-  font-size: 14px;
 }
-
-#waveDisplay {
-  color: var(--green);
-  font-size: 16px;
-  font-weight: bold;
-}
-
-#timerDisplay {
-  color: #ffcc00;
-  font-size: 16px;
-  font-weight: bold;
-  min-width: 60px;
-  text-align: center;
-}
-
-/* Счёт */
-#scorePanel {
-  position: fixed;
-  top: 60px; right: 10px;
-  background: rgba(13,13,26,0.85);
+#healthNum { font-size: 13px; color: #ff8888; min-width: 28px; }
+.hud-stat {
+  background: rgba(26,26,53,0.6);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  min-width: 180px;
-  z-index: 100;
-  backdrop-filter: blur(8px);
+  border-radius: 8px; padding: 3px 12px;
+  font-size: 13px; letter-spacing: 1px;
 }
+#timerDisplay { color: #ffcc00; font-size: 18px; font-weight: bold; min-width: 70px; text-align:center; }
+#waveDisplay  { color: var(--green); font-size: 15px; font-weight: bold; display:none; }
+.hud-btn {
+  background: rgba(42,42,90,0.5); border: 1px solid var(--border);
+  color: var(--muted); padding: 4px 14px; border-radius: 8px;
+  cursor: pointer; font-family: inherit; font-size: 12px;
+  letter-spacing: 1px; transition: all 0.2s;
+}
+.hud-btn:hover { background: rgba(80,40,40,0.6); color: #ff8888; border-color: rgba(255,68,68,0.4); }
 
+/* Score */
+#scorePanel {
+  position: fixed; top: 56px; right: 10px;
+  background: rgba(8,8,20,0.88);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px; min-width: 170px; z-index: 100;
+  backdrop-filter: blur(12px);
+}
 #scorePanel h3 {
-  color: var(--accent);
-  font-size: 13px;
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 6px;
+  color: var(--accent); font-size: 11px; letter-spacing: 3px;
+  margin-bottom: 8px; border-bottom: 1px solid var(--border);
+  padding-bottom: 6px; text-align: center;
 }
-
 .score-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 0;
-  font-size: 13px;
-  border-bottom: 1px solid rgba(42,42,90,0.5);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 2px; font-size: 12px;
+  border-bottom: 1px solid rgba(42,42,90,0.4);
 }
-
-.score-row.me { color: var(--accent); }
-.score-row.team-red { color: #ff4444; }
-.score-row.team-blue { color: var(--blue); }
+.score-row.me        { color: #ffffff; font-weight: bold; }
+.score-row.team-red  { color: #ff5555; }
+.score-row.team-blue { color: #5599ff; }
+.score-name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Kill feed */
 #killFeed {
-  position: fixed;
-  bottom: 10px; left: 10px;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  position: fixed; bottom: 14px; left: 14px;
+  z-index: 100; display: flex; flex-direction: column; gap: 5px;
 }
-
 .kill-msg {
-  background: rgba(0,0,0,0.7);
+  background: rgba(8,8,20,0.85);
   border-left: 3px solid #ff4444;
-  padding: 5px 10px;
-  border-radius: 0 6px 6px 0;
-  font-size: 13px;
-  animation: slideIn 0.3s ease, fadeOut 0.5s 2.5s forwards;
+  padding: 5px 12px; border-radius: 0 8px 8px 0;
+  font-size: 12px; letter-spacing: 0.5px;
+  animation: slideIn 0.3s ease, fadeMsgOut 0.4s 2.6s forwards;
+  backdrop-filter: blur(8px);
 }
+@keyframes slideIn { from { transform:translateX(-110%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+@keyframes fadeMsgOut { to { opacity:0; transform:translateX(-30px); } }
 
-@keyframes slideIn {
-  from { transform: translateX(-100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes fadeOut {
-  to { opacity: 0; transform: translateX(-100%); }
-}
-
-/* Спектатор */
+/* Spectator */
 #spectatorBanner {
-  position: fixed;
-  top: 60px; left: 50%;
+  position: fixed; top: 56px; left: 50%;
   transform: translateX(-50%);
-  background: rgba(0,0,0,0.8);
-  border: 1px solid #ffcc00;
-  border-radius: 8px;
-  padding: 8px 20px;
-  color: #ffcc00;
-  font-size: 14px;
-  letter-spacing: 2px;
-  z-index: 200;
-  display: none;
+  background: rgba(8,8,20,0.9);
+  border: 1px solid #ffcc00; border-radius: 8px;
+  padding: 7px 22px; color: #ffcc00; font-size: 13px;
+  letter-spacing: 3px; z-index: 200; display: none;
 }
 
-/* Волна */
+/* Wave announce */
 #waveAnnounce {
-  position: fixed;
-  top: 50%; left: 50%;
+  position: fixed; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  text-align: center;
-  z-index: 500;
-  pointer-events: none;
-  display: none;
+  text-align: center; z-index: 500; pointer-events: none; display: none;
 }
-
-#waveAnnounce h2 {
-  font-size: 48px;
-  color: var(--green);
-  text-shadow: 0 0 30px rgba(51,255,153,0.8);
-  animation: waveAnim 2s ease forwards;
+#waveText {
+  font-size: 52px; font-weight: 900; color: var(--green);
+  text-shadow: 0 0 40px rgba(51,255,153,0.9);
+  animation: waveAnim 2.5s ease forwards;
+  letter-spacing: 6px;
 }
-
 @keyframes waveAnim {
-  0% { transform: scale(0.5); opacity: 0; }
-  30% { transform: scale(1.1); opacity: 1; }
-  70% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(1.2); opacity: 0; }
+  0%   { transform:scale(0.4); opacity:0; }
+  25%  { transform:scale(1.15); opacity:1; }
+  65%  { transform:scale(1); opacity:1; }
+  100% { transform:scale(1.1); opacity:0; }
 }
 
-/* Смерть */
+/* Death */
 #deathOverlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(255,0,0,0.15);
-  pointer-events: none;
-  z-index: 300;
-  display: none;
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse, rgba(255,0,0,0.25), transparent 70%);
+  pointer-events: none; z-index: 300; display: none;
 }
-
 #deathMsg {
-  position: fixed;
-  top: 50%; left: 50%;
+  position: fixed; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  text-align: center;
-  z-index: 400;
-  display: none;
+  text-align: center; z-index: 400; display: none;
+  background: rgba(8,8,20,0.9);
+  border: 2px solid #ff4444; border-radius: 16px;
+  padding: 30px 50px;
 }
+#deathMsg h2 { font-size: 32px; color: #ff4444; margin-bottom: 10px; }
+#deathMsg p  { color: var(--muted); font-size: 15px; }
 
-#deathMsg h2 { font-size: 36px; color: #ff4444; margin-bottom: 10px; }
-#deathMsg p { color: var(--muted); font-size: 16px; }
-
-/* Конец игры */
+/* End screen */
 #endScreen {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  position: fixed; inset: 0;
+  background: rgba(4,4,12,0.92);
+  display: none; align-items: center; justify-content: center;
+  z-index: 1000; backdrop-filter: blur(16px);
+}
+.end-box {
+  background: rgba(19,19,42,0.98);
+  border: 2px solid var(--accent); border-radius: 20px;
+  padding: 44px; text-align: center; min-width: 420px;
+  box-shadow: 0 0 80px rgba(255,102,0,0.3);
+}
+.end-box h2    { font-size: 26px; color: var(--accent); margin-bottom: 8px; letter-spacing: 4px; }
+.end-box .reason { color: var(--muted); margin-bottom: 24px; font-size: 15px; }
+.end-score-row {
+  display: flex; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+}
+.end-score-row:first-child { color: #ffcc00; font-size: 16px; }
+.end-score-row:nth-child(2) { color: #cccccc; }
+.end-score-row:nth-child(3) { color: #cc8844; }
+
+/* Controls hint */
+.controls-hint {
+  position: fixed; bottom: 12px; right: 12px;
+  background: rgba(8,8,20,0.75);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 14px; font-size: 11px; color: var(--muted);
+  z-index: 100; line-height: 2; letter-spacing: 0.5px;
   backdrop-filter: blur(8px);
 }
 
-.end-box {
-  background: var(--panel);
-  border: 2px solid var(--accent);
-  border-radius: 16px;
-  padding: 40px;
-  text-align: center;
-  min-width: 400px;
-  box-shadow: 0 0 60px rgba(255,102,0,0.3);
+/* Respawn bar */
+#respawnBar {
+  position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,8,20,0.9); border: 1px solid #ff4444;
+  border-radius: 8px; padding: 8px 20px; display: none;
+  font-size: 13px; color: #ff8888; z-index: 400; letter-spacing: 1px;
 }
-
-.end-box h2 { font-size: 28px; color: var(--accent); margin-bottom: 10px; }
-.end-box .reason { color: var(--muted); margin-bottom: 25px; font-size: 16px; }
-
-.end-scores { margin-bottom: 25px; }
-.end-score-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 15px;
-}
-
-.end-score-row:first-child { color: #ffcc00; }
-
-.controls-hint {
-  position: fixed;
-  bottom: 10px; right: 10px;
-  background: rgba(0,0,0,0.6);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 11px;
-  color: var(--muted);
-  z-index: 100;
-  line-height: 1.8;
-}
-
-/* Мигание при ранении */
-@keyframes hurt {
-  0%,100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-.hurt-flash { animation: hurt 0.3s ease 3; }
 </style>
 </head>
 <body>
 
-<!-- ===== ГЛАВНОЕ МЕНЮ ===== -->
+<!-- МЕНЮ -->
 <div id="menuScreen" class="screen active">
   <div class="logo">HOTLINE</div>
   <div class="logo-sub">ONLINE SHOOTER</div>
   <div class="menu-box">
     <div class="input-group">
-      <label>ТВОЁ ИМЯ</label>
-      <input type="text" id="playerName" placeholder="Введи имя..." maxlength="15" value="">
+      <label>Твоё имя</label>
+      <input type="text" id="playerName" placeholder="Введи имя..." maxlength="15" autocomplete="off" spellcheck="false">
     </div>
-    <button class="btn btn-primary" onclick="goToLobbyList()">🎮 ИГРАТЬ</button>
+    <button class="btn btn-primary" id="playBtn">🎮 ИГРАТЬ</button>
     <button class="btn btn-secondary" onclick="showControls()">⌨️ УПРАВЛЕНИЕ</button>
   </div>
 </div>
 
-<!-- ===== ВЫБОР ЛОББИ ===== -->
+<!-- ЛОББИ -->
 <div id="lobbyScreen" class="screen">
   <div class="lobby-header">
     <h1>🎮 ВЫБОР СЕРВЕРА</h1>
     <p id="onlineCount">Онлайн: подключение...</p>
   </div>
   <div class="lobby-grid" id="lobbyGrid">
-    <div style="color:var(--muted); grid-column:1/-1; text-align:center; padding:40px">
-      Загрузка серверов...
-    </div>
+    <div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px">Загрузка...</div>
   </div>
   <button class="btn btn-secondary" style="max-width:200px" onclick="showScreen('menuScreen')">← НАЗАД</button>
 </div>
 
-<!-- ===== ОЖИДАНИЕ ===== -->
+<!-- ОЖИДАНИЕ -->
 <div id="waitScreen" class="screen">
   <div class="wait-box">
     <div class="wait-title" id="waitLobbyName">Лобби</div>
-    <div class="wait-sub" id="waitModeName">Режим игры</div>
-
+    <div class="wait-sub"   id="waitModeName">Режим</div>
     <div id="waitingSection">
-      <div class="waiting-msg">⏳ Ожидание игроков... (нужно минимум 2)</div>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:12px">
+        ⏳ Ожидание игроков... (нужно минимум 2)
+      </div>
       <div class="players-in-lobby" id="waitPlayers"></div>
     </div>
-
     <div id="countdownSection" style="display:none">
-      <div style="color:var(--muted); margin-bottom:15px; font-size:14px">
-        🎮 Игра начинается через...
-      </div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:14px">Игра начинается через...</div>
       <div class="countdown-circle" id="countdownNum">20</div>
-      <div style="color:var(--muted); font-size:13px; margin-bottom:20px">
-        Другие игроки ещё могут присоединиться!
-      </div>
+      <div style="color:var(--muted);font-size:12px;margin-bottom:16px">Другие игроки ещё могут войти!</div>
       <div class="players-in-lobby" id="waitPlayersCountdown"></div>
     </div>
-
     <button class="btn btn-secondary" onclick="leaveLobby()">← ПОКИНУТЬ</button>
   </div>
 </div>
 
-<!-- ===== ИГРА ===== -->
+<!-- ИГРА -->
 <div id="gameScreen" class="screen">
-  <!-- HUD -->
   <div id="hud">
-    <div class="hud-section">
-      <div class="health-bar-wrap">
-        <span>❤️</span>
+    <div class="hud-left">
+      <div class="hp-wrap">
+        <span class="hp-icon">❤️</span>
         <div id="healthBar"><div id="healthFill"></div></div>
-        <span id="healthNum" style="font-size:13px; color:#ff8888">100</span>
+        <span id="healthNum">100</span>
       </div>
       <div class="hud-stat">💀 <span id="myKills">0</span></div>
+      <div class="hud-stat" id="ammoDisplay">🔫 ∞</div>
     </div>
-    <div class="hud-section">
-      <div id="waveDisplay" style="display:none">🌊 ВОЛНА <span id="waveNum">1</span></div>
+    <div class="hud-center">
+      <div id="waveDisplay">🌊 ВОЛНА <span id="waveNum">1</span></div>
       <div id="timerDisplay">3:00</div>
-      <div class="hud-stat" id="playerCountHud">👥 0</div>
     </div>
-    <div class="hud-section">
-      <button onclick="leaveLobby()" style="
-        background: transparent; border: 1px solid var(--border);
-        color: var(--muted); padding: 4px 12px; border-radius: 6px;
-        cursor: pointer; font-family: inherit; font-size: 12px;
-      ">ВЫЙТИ</button>
+    <div class="hud-right">
+      <div class="hud-stat" id="playerCountHud">👥 0</div>
+      <button class="hud-btn" onclick="leaveLobby()">ВЫЙТИ</button>
     </div>
   </div>
 
-  <!-- Canvas -->
-  <canvas id="gameCanvas" width="900" height="580" style="margin-top:50px"></canvas>
+  <canvas id="gameCanvas" width="900" height="580" style="margin-top:48px"></canvas>
 
-  <!-- Счёт -->
   <div id="scorePanel">
     <h3>🏆 СЧЁТ</h3>
     <div id="scoreList"></div>
   </div>
-
-  <!-- Kill feed -->
   <div id="killFeed"></div>
-
-  <!-- Спектатор -->
-  <div id="spectatorBanner">👁️ РЕЖИМ НАБЛЮДАТЕЛЯ</div>
-
-  <!-- Волна -->
-  <div id="waveAnnounce"><h2 id="waveText">ВОЛНА 1</h2></div>
-
-  <!-- Смерть -->
+  <div id="spectatorBanner">👁 НАБЛЮДАТЕЛЬ</div>
+  <div id="waveAnnounce"><div id="waveText">ВОЛНА 1</div></div>
   <div id="deathOverlay"></div>
   <div id="deathMsg">
     <h2>☠️ ВЫ ПОГИБЛИ</h2>
-    <p id="deathSubText">Возрождение через 3 секунды...</p>
+    <p id="deathSubText">Возрождение через 3 сек...</p>
   </div>
+  <div id="respawnBar">⏳ Возрождение: <span id="respawnCount">3</span></div>
 
-  <!-- Конец игры -->
   <div id="endScreen">
     <div class="end-box">
       <h2>🏁 ИГРА ОКОНЧЕНА</h2>
       <div class="reason" id="endReason"></div>
-      <div class="end-scores" id="endScores"></div>
-      <div id="endWave" style="color:var(--green); margin-bottom:15px; display:none"></div>
+      <div id="endScores" style="margin-bottom:24px"></div>
+      <div id="endWave" style="color:var(--green);margin-bottom:16px;font-size:15px;display:none"></div>
       <button class="btn btn-primary" onclick="backToLobbyList()">🎮 ВЫБРАТЬ СЕРВЕР</button>
     </div>
   </div>
 
-  <!-- Подсказки -->
   <div class="controls-hint">
-    WASD — движение<br>
-    Мышь — прицел<br>
-    ЛКМ — выстрел
+    A D — движение<br>
+    W — прыжок / вверх<br>
+    S — вниз<br>
+    Мышь — прицел | ЛКМ — огонь
   </div>
 </div>
 
-<!-- ===== СКРИПТЫ ===== -->
 <script src="/socket.io/socket.io.js"></script>
 <script>
-// ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
-const socket = io();
+// ============================================================
+//  КОНСТАНТЫ
+// ============================================================
+const CANVAS_W = 900, CANVAS_H = 580;
+const PLAYER_R  = 17;
+const BULLET_SPEED = 12;
+const SHOOT_CD = 220;
+const RESPAWN_TIME = 3000;
 
-let myId = null;
-let myName = 'Player';
-let currentLobbyId = null;
-let currentMode = null;
-let isSpectator = false;
-let isDead = false;
-let myHealth = 100;
-let myKills = 0;
+// Безопасные точки спауна (не внутри стен) — задаются для каждой карты
+// Стены: [{x,y,w,h}, ...]
+// Карты
+const MAPS = {
+  deathmatch: {
+    bg: '#0a0a1a',
+    grid: '#10102a',
+    wallFill: '#1a2540',
+    wallStroke: '#2a3860',
+    wallTop: '#2e4a7a',
+    walls: [
+      {x:60,  y:60,  w:16, h:200},
+      {x:220, y:60,  w:200,h:16},
+      {x:620, y:60,  w:16, h:180},
+      {x:700, y:140, w:180,h:16},
+      {x:120, y:320, w:180,h:16},
+      {x:580, y:300, w:16, h:200},
+      {x:340, y:220, w:16, h:140},
+      {x:340, y:420, w:200,h:16},
+      {x:780, y:380, w:16, h:180},
+      {x:60,  y:480, w:160,h:16},
+      {x:460, y:100, w:100,h:16},
+      {x:200, y:460, w:16, h:120},
+    ],
+    spawns: [
+      {x:160,y:160},{x:500,y:160},{x:800,y:280},
+      {x:160,y:430},{x:500,y:490},{x:720,y:490},
+      {x:420,y:340},{x:800,y:100}
+    ]
+  },
+  survival: {
+    bg: '#050f0a',
+    grid: '#091508',
+    wallFill: '#0f2010',
+    wallStroke: '#1a3820',
+    wallTop: '#1e5025',
+    walls: [
+      {x:40,  y:40,  w:16, h:240},
+      {x:40,  y:40,  w:240,h:16},
+      {x:840, y:40,  w:16, h:240},
+      {x:620, y:40,  w:240,h:16},
+      {x:40,  y:480, w:240,h:16},
+      {x:40,  y:300, w:16, h:200},
+      {x:840, y:300, w:16, h:200},
+      {x:620, y:480, w:240,h:16},
+      {x:260, y:160, w:140,h:16},
+      {x:500, y:160, w:140,h:16},
+      {x:260, y:360, w:140,h:16},
+      {x:500, y:360, w:140,h:16},
+      {x:380, y:240, w:16, h:100},
+      {x:505, y:240, w:16, h:100},
+      {x:160, y:260, w:100,h:16},
+      {x:640, y:260, w:100,h:16},
+    ],
+    spawns: [
+      {x:160,y:120},{x:720,y:120},{x:160,y:430},
+      {x:720,y:430},{x:450,y:290},{x:290,y:290},
+      {x:610,y:290},{x:450,y:120}
+    ]
+  },
+  team: {
+    bg: '#0a0a10',
+    grid: '#10101e',
+    wallFill: '#18182a',
+    wallStroke: '#26264a',
+    wallTop: '#30307a',
+    walls: [
+      {x:390, y:40,  w:16, h:500},
+      {x:200, y:200, w:16, h:180},
+      {x:680, y:200, w:16, h:180},
+      {x:60,  y:120, w:140,h:16},
+      {x:700, y:120, w:140,h:16},
+      {x:60,  y:440, w:140,h:16},
+      {x:700, y:440, w:140,h:16},
+      {x:280, y:60,  w:16, h:120},
+      {x:600, y:60,  w:16, h:120},
+      {x:280, y:400, w:16, h:140},
+      {x:600, y:400, w:16, h:140},
+      {x:60,  y:280, w:100,h:16},
+      {x:740, y:280, w:100,h:16},
+      {x:430, y:200, w:100,h:16},
+      {x:370, y:360, w:100,h:16},
+    ],
+    spawns: [
+      {x:120,y:80}, {x:120,y:360},{x:120,y:490},
+      {x:780,y:80}, {x:780,y:360},{x:780,y:490},
+      {x:220,y:300},{x:660,y:300}
+    ]
+  }
+};
 
-// Игровые объекты
-let players = {};
-let bots = {};
-let bullets = [];
-let particles = [];
-let keys = {};
-let mouseX = 450, mouseY = 290;
+// ============================================================
+//  СОСТОЯНИЕ
+// ============================================================
+const socket = io({ transports: ['websocket'] });
+
+let myId = null, myName = 'Player';
+let currentLobbyId = null, currentMode = null;
+let isSpectator = false, isDead = false;
+let myHealth = 100, myKills = 0;
+
+let players  = {};
+let bots     = {};
+let bullets  = [];
+let particles= [];
+let keys     = {};
+let mouseX   = CANVAS_W/2, mouseY = CANVAS_H/2;
 let lastShot = 0;
-const SHOOT_COOLDOWN = 250;
+let gameRunning = false;
+let animFrame   = null;
+let currentMap  = MAPS.deathmatch;
 
-// Карта
-const WALLS = [
-  { x: 80,  y: 80,  w: 20, h: 180 },
-  { x: 200, y: 180, w: 180, h: 20 },
-  { x: 550, y: 80,  w: 20, h: 180 },
-  { x: 650, y: 200, w: 180, h: 20 },
-  { x: 150, y: 380, w: 200, h: 20 },
-  { x: 550, y: 360, w: 20, h: 180 },
-  { x: 350, y: 250, w: 20, h: 130 },
-  { x: 380, y: 440, w: 160, h: 20 },
-  { x: 750, y: 420, w: 130, h: 20 },
-  { x: 100, y: 500, w: 150, h: 20 },
-];
+// Интерполяция других игроков
+const playerTargets = {};
 
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const ctx    = canvas.getContext('2d');
 
-// ==================== НАВИГАЦИЯ ====================
+// ============================================================
+//  МЕНЮ / НАВИГАЦИЯ
+// ============================================================
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-
+function showControls() {
+  alert('A / D — влево / вправо\nW — вверх\nS — вниз\nМышь — прицел\nЛКМ — выстрел');
+}
 function goToLobbyList() {
   myName = document.getElementById('playerName').value.trim() || 'Player';
   socket.emit('setName', myName);
   showScreen('lobbyScreen');
 }
-
-function showControls() {
-  alert('WASD / Стрелки — движение\nМышь — прицел\nЛКМ — выстрелить');
-}
-
 function backToLobbyList() {
   document.getElementById('endScreen').style.display = 'none';
   leaveLobby();
   showScreen('lobbyScreen');
 }
-
 function leaveLobby() {
   socket.emit('leaveLobby');
-  currentLobbyId = null;
-  isSpectator = false;
-  isDead = false;
-  players = {};
-  bots = {};
-  bullets = [];
-  particles = [];
-  keys = {};
-  if (gameRunning) stopGame();
-  showScreen('lobbyScreen');
+  currentLobbyId = null; isSpectator = false; isDead = false;
+  players={}; bots={}; bullets=[]; particles=[]; keys={};
+  stopGame();
 }
 
-// ==================== ЛОББИ СПИСОК ====================
-const MODE_NAMES = {
-  deathmatch: '⚔️ Deathmatch',
-  survival: '🧟 Выживание',
-  team: '🛡️ Команды'
-};
+// Кнопка играть
+document.getElementById('playBtn').addEventListener('click', goToLobbyList);
+document.getElementById('playerName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') goToLobbyList();
+  e.stopPropagation(); // не передавать в игровые обработчики
+});
 
+// ============================================================
+//  LOBBY LIST
+// ============================================================
+const MODE_NAMES   = { deathmatch:'⚔️ Deathmatch', survival:'🧟 Выживание', team:'🛡️ Команды' };
 const STATE_LABELS = {
-  waiting: { text: 'ОЖИДАНИЕ', cls: 'state-waiting' },
-  countdown: { text: 'СКОРО...', cls: 'state-countdown' },
-  playing: { text: 'ИДЁТ ИГРА', cls: 'state-playing' },
-  ended: { text: 'ЗАВЕРШЕНО', cls: 'state-ended' }
+  waiting:   { text:'ОЖИДАНИЕ',  cls:'state-waiting'   },
+  countdown: { text:'СКОРО...',  cls:'state-countdown' },
+  playing:   { text:'ИДЁТ ИГРА',cls:'state-playing'   },
+  ended:     { text:'ЗАВЕРШЕНО', cls:'state-ended'     }
 };
 
-socket.on('lobbyList', (list) => {
+socket.on('lobbyList', list => {
   const grid = document.getElementById('lobbyGrid');
-  document.getElementById('onlineCount').textContent =
-    `Онлайн: ${list.reduce((s, l) => s + l.playerCount, 0)} игроков`;
-
+  const total = list.reduce((s,l) => s + l.playerCount, 0);
+  document.getElementById('onlineCount').textContent = `Онлайн: ${total} игроков`;
   grid.innerHTML = list.map(lobby => {
-    const state = STATE_LABELS[lobby.state] || STATE_LABELS.waiting;
-    const canJoin = lobby.state !== 'ended';
-    return `
-    <div class="lobby-card ${lobby.mode}" onclick="${canJoin ? `joinLobby('${lobby.id}')` : ''}">
+    const st  = STATE_LABELS[lobby.state] || STATE_LABELS.waiting;
+    const can = lobby.state !== 'ended';
+    return `<div class="lobby-card ${lobby.mode}" ${can ? `onclick="joinLobby('${lobby.id}')"` : ''}>
       <span class="mode-badge badge-${lobby.mode}">${MODE_NAMES[lobby.mode]}</span>
       <div class="lobby-card-title">${lobby.name}</div>
       <div class="lobby-card-info">
         <span>👥 ${lobby.playerCount}/${lobby.maxPlayers}</span>
-        ${lobby.mode === 'survival' && lobby.state === 'playing' ? `<span>🌊 Волна ${lobby.wave}</span>` : ''}
+        ${lobby.mode==='survival'&&lobby.state==='playing'?`<span>🌊 Волна ${lobby.wave}</span>`:''}
       </div>
-      <div class="lobby-card-state ${state.cls}">${state.text}</div>
+      <div class="lobby-card-state ${st.cls}">${st.text}</div>
     </div>`;
   }).join('');
 });
@@ -790,94 +710,84 @@ function joinLobby(lobbyId) {
   socket.emit('joinLobby', lobbyId);
 }
 
-// ==================== ОЖИДАНИЕ В ЛОББИ ====================
-socket.on('joinedLobby', (data) => {
+// ============================================================
+//  WAIT SCREEN
+// ============================================================
+socket.on('joinedLobby', data => {
   currentLobbyId = data.lobbyId;
-  currentMode = data.lobby.mode;
-  myId = data.myId;
+  currentMode    = data.lobby.mode;
+  myId           = data.myId;
+  players        = data.lobby.players || {};
 
-  document.getElementById('waitLobbyName').textContent =
-    data.lobby.name || 'Лобби';
-  document.getElementById('waitModeName').textContent =
-    MODE_NAMES[data.lobby.mode] || 'Режим';
+  currentMap = MAPS[currentMode] || MAPS.deathmatch;
 
-  players = data.lobby.players || {};
-  updateWaitPlayers();
-
-  document.getElementById('waitingSection').style.display = 'block';
-  document.getElementById('countdownSection').style.display = 'none';
+  document.getElementById('waitLobbyName').textContent = data.lobby.name || 'Лобби';
+  document.getElementById('waitModeName').textContent  = MODE_NAMES[currentMode] || '';
+  updateWaitPlayers('waitPlayers');
+  document.getElementById('waitingSection').style.display  = 'block';
+  document.getElementById('countdownSection').style.display= 'none';
   showScreen('waitScreen');
 });
 
-socket.on('playerJoined', (player) => {
-  players[player.id] = player;
-  updateWaitPlayers();
-  updateWaitPlayersCountdown();
+socket.on('playerJoined', p => {
+  players[p.id] = p;
+  updateWaitPlayers('waitPlayers');
+  updateWaitPlayers('waitPlayersCountdown');
 });
-
-socket.on('playerLeft', (id) => {
-  delete players[id];
-  delete bots[id];
-  updateWaitPlayers();
+socket.on('playerLeft', id => {
+  delete players[id]; delete bots[id];
+  updateWaitPlayers('waitPlayers');
   updateScorePanel();
 });
 
-function updateWaitPlayers() {
-  const el = document.getElementById('waitPlayers');
+function updateWaitPlayers(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
   el.innerHTML = Object.values(players).map(p =>
-    `<div class="player-chip" style="border-color:${p.color}">${p.id === myId ? '▶ ' : ''}${p.name}</div>`
+    `<div class="player-chip" style="border-color:${p.color||'#446'}">${p.id===myId?'▶ ':''}${p.name||'Player'}</div>`
   ).join('');
 }
 
-function updateWaitPlayersCountdown() {
-  const el = document.getElementById('waitPlayersCountdown');
-  el.innerHTML = Object.values(players).map(p =>
-    `<div class="player-chip" style="border-color:${p.color}">${p.id === myId ? '▶ ' : ''}${p.name}</div>`
-  ).join('');
-}
-
-socket.on('countdown', (data) => {
-  document.getElementById('waitingSection').style.display = 'none';
-  document.getElementById('countdownSection').style.display = 'block';
+socket.on('countdown', data => {
+  document.getElementById('waitingSection').style.display  = 'none';
+  document.getElementById('countdownSection').style.display= 'block';
   document.getElementById('countdownNum').textContent = data.seconds;
-  updateWaitPlayersCountdown();
+  updateWaitPlayers('waitPlayersCountdown');
 });
-
 socket.on('countdownCancelled', () => {
-  document.getElementById('waitingSection').style.display = 'block';
-  document.getElementById('countdownSection').style.display = 'none';
+  document.getElementById('waitingSection').style.display  = 'block';
+  document.getElementById('countdownSection').style.display= 'none';
 });
 
-// ==================== НАЧАЛО ИГРЫ ====================
-socket.on('gameStarted', (data) => {
+// ============================================================
+//  GAME START
+// ============================================================
+socket.on('gameStarted', data => {
   currentMode = data.mode;
-  players = data.players || {};
-  myHealth = 100;
-  myKills = 0;
-  isDead = false;
-  isSpectator = false;
-  bots = {};
-  bullets = [];
-  particles = [];
+  currentMap  = MAPS[currentMode] || MAPS.deathmatch;
+  players     = data.players || {};
+  myHealth    = 100; myKills = 0;
+  isDead      = false; isSpectator = false;
+  bots={}; bullets=[]; particles=[];
 
-  document.getElementById('endScreen').style.display = 'none';
-  document.getElementById('spectatorBanner').style.display = 'none';
-  document.getElementById('deathMsg').style.display = 'none';
-  document.getElementById('deathOverlay').style.display = 'none';
-  document.getElementById('myKills').textContent = '0';
-  document.getElementById('healthFill').style.width = '100%';
-  document.getElementById('healthNum').textContent = '100';
+  document.getElementById('endScreen').style.display     = 'none';
+  document.getElementById('spectatorBanner').style.display= 'none';
+  document.getElementById('deathMsg').style.display       = 'none';
+  document.getElementById('deathOverlay').style.display   = 'none';
+  document.getElementById('respawnBar').style.display      = 'none';
+  document.getElementById('myKills').textContent           = '0';
 
-  // Режим выживания
   if (data.mode === 'survival') {
-    document.getElementById('waveDisplay').style.display = 'block';
+    document.getElementById('waveDisplay').style.display  = 'flex';
     document.getElementById('timerDisplay').style.display = 'none';
     document.getElementById('waveNum').textContent = data.wave || 1;
   } else {
-    document.getElementById('waveDisplay').style.display = 'none';
+    document.getElementById('waveDisplay').style.display  = 'none';
     document.getElementById('timerDisplay').style.display = 'block';
+    document.getElementById('timerDisplay').textContent   = '3:00';
   }
 
+  updateHUD();
   updateScorePanel();
   showScreen('gameScreen');
   startGameLoop();
@@ -885,422 +795,513 @@ socket.on('gameStarted', (data) => {
 
 socket.on('becameSpectator', () => {
   isSpectator = true;
-  isDead = false;
   document.getElementById('spectatorBanner').style.display = 'block';
   showScreen('gameScreen');
   startGameLoop();
 });
 
-// ==================== СОБЫТИЯ ИГРЫ ====================
-socket.on('playerMoved', (data) => {
-  if (players[data.id]) {
-    players[data.id].x = data.x;
-    players[data.id].y = data.y;
-    players[data.id].angle = data.angle;
-  }
+// ============================================================
+//  ИГРОВЫЕ СОБЫТИЯ
+// ============================================================
+socket.on('playerMoved', data => {
+  if (!players[data.id]) return;
+  // Интерполяция
+  playerTargets[data.id] = { x: data.x, y: data.y, angle: data.angle };
 });
 
-socket.on('bulletCreated', (b) => {
+socket.on('bulletCreated', b => {
   bullets.push({
     ...b,
     velX: Math.cos(b.angle) * b.speed,
     velY: Math.sin(b.angle) * b.speed,
-    life: 80,
-    clientOnly: true
+    life: 90, maxLife: 90
   });
 });
 
-socket.on('botsUpdate', (data) => {
+socket.on('botsUpdate', data => {
   Object.entries(data).forEach(([id, pos]) => {
-    if (bots[id]) {
-      bots[id].x = pos.x;
-      bots[id].y = pos.y;
-      bots[id].angle = pos.angle;
-      bots[id].health = pos.health;
-    }
+    if (bots[id]) { bots[id].x=pos.x; bots[id].y=pos.y; bots[id].angle=pos.angle; bots[id].health=pos.health; }
   });
 });
-
-socket.on('botSpawned', (bot) => {
-  bots[bot.id] = { ...bot, isBot: true };
-  showWaveAnnounce(`🌊 ВОЛНА ${bot.wave}`);
+socket.on('botSpawned', bot => {
+  bots[bot.id] = { ...bot, isBot:true };
 });
-
-socket.on('botDied', (data) => {
-  spawnParticles(data.x, data.y, '#ff4400', 15);
-  delete bots[data.id];
-});
-
-socket.on('botHurt', (data) => {
-  if (bots[data.id]) bots[data.id].health = data.health;
-});
-
-socket.on('waveStarted', (data) => {
+socket.on('waveStarted', data => {
   document.getElementById('waveNum').textContent = data.wave;
-  showWaveAnnounce(`🌊 ВОЛНА ${data.wave} — ${data.botCount} ВРАГОВ`);
+  showWaveAnnounce(`ВОЛНА ${data.wave}`);
 });
+socket.on('botDied',  data => { spawnParticles(data.x, data.y, '#ff4400', 18); delete bots[data.id]; });
+socket.on('botHurt',  data => { if (bots[data.id]) bots[data.id].health = data.health; });
 
-socket.on('playerHurt', (data) => {
+socket.on('playerHurt', data => {
   if (players[data.id]) players[data.id].health = data.health;
   if (data.id === myId) {
-    myHealth = data.health;
-    updateHUD();
-    canvas.classList.add('hurt-flash');
-    setTimeout(() => canvas.classList.remove('hurt-flash'), 900);
+    myHealth = data.health; updateHUD();
+    screenFlash('rgba(255,0,0,0.25)');
   }
 });
 
-socket.on('playerDied', (data) => {
-  if (players[data.deadId]) {
-    players[data.deadId].isDead = true;
-    players[data.deadId].health = 0;
-  }
+socket.on('playerDied', data => {
+  if (players[data.deadId]) { players[data.deadId].isDead=true; players[data.deadId].health=0; }
   if (data.deadId === myId) {
-    isDead = true;
-    myHealth = 0;
-    updateHUD();
+    isDead=true; myHealth=0; updateHUD();
     document.getElementById('deathOverlay').style.display = 'block';
-    document.getElementById('deathMsg').style.display = 'block';
-    const sub = currentMode === 'survival' ? 'Вы выбыли из игры' : 'Возрождение через 3 секунды...';
-    document.getElementById('deathSubText').textContent = sub;
-    spawnParticles(players[myId]?.x || 450, players[myId]?.y || 290, '#ff0000', 25);
+    document.getElementById('deathMsg').style.display     = 'block';
+    const isSurv = currentMode==='survival';
+    document.getElementById('deathSubText').textContent =
+      isSurv ? 'Вы выбыли из игры' : 'Возрождение через 3 сек...';
+    if (!isSurv) startRespawnCountdown(3);
+    spawnParticles(players[myId]?.x||450, players[myId]?.y||290, '#ff2244', 30);
   }
-  addKillFeed(data.killerName || '???', players[data.deadId]?.name || '???', data.deadId === myId);
+  addKillFeed(data.killerName||'???', players[data.deadId]?.name||'???', data.deadId===myId);
 });
 
-socket.on('playerRespawned', (data) => {
+socket.on('playerRespawned', data => {
   if (players[data.id]) {
-    players[data.id].isDead = false;
-    players[data.id].health = 100;
-    players[data.id].x = data.x;
-    players[data.id].y = data.y;
+    players[data.id].isDead=false; players[data.id].health=100;
+    players[data.id].x=data.x; players[data.id].y=data.y;
   }
-  if (data.id === myId) {
-    isDead = false;
-    myHealth = 100;
-    updateHUD();
-    document.getElementById('deathOverlay').style.display = 'none';
-    document.getElementById('deathMsg').style.display = 'none';
+  if (data.id===myId) {
+    isDead=false; myHealth=100; updateHUD();
+    document.getElementById('deathOverlay').style.display= 'none';
+    document.getElementById('deathMsg').style.display    = 'none';
+    document.getElementById('respawnBar').style.display  = 'none';
     spawnParticles(data.x, data.y, '#33ff99', 20);
+    screenFlash('rgba(51,255,153,0.2)');
   }
 });
 
-socket.on('updateScore', (data) => {
+socket.on('updateScore', data => {
   if (players[data.id]) players[data.id].score = data.score;
-  if (data.id === myId) {
-    myKills = data.score;
-    document.getElementById('myKills').textContent = data.score;
-  }
+  if (data.id===myId) { myKills=data.score; document.getElementById('myKills').textContent=data.score; }
   updateScorePanel();
 });
-
-socket.on('nameUpdated', (data) => {
+socket.on('nameUpdated', data => {
   if (players[data.id]) players[data.id].name = data.name;
   updateScorePanel();
 });
-
-socket.on('timerUpdate', (data) => {
-  const m = Math.floor(data.timeLeft / 60);
-  const s = data.timeLeft % 60;
-  document.getElementById('timerDisplay').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+socket.on('timerUpdate', data => {
+  const m=Math.floor(data.timeLeft/60), s=data.timeLeft%60;
+  document.getElementById('timerDisplay').textContent = `${m}:${String(s).padStart(2,'0')}`;
+  if (data.timeLeft<=30) document.getElementById('timerDisplay').style.color='#ff4444';
 });
-
-socket.on('gameEnded', (data) => {
+socket.on('gameEnded', data => {
   document.getElementById('endReason').textContent = data.reason;
-  const scoresEl = document.getElementById('endScores');
-  scoresEl.innerHTML = data.scores.map((s, i) =>
+  document.getElementById('endScores').innerHTML = data.scores.map((s,i)=>
     `<div class="end-score-row">
-      <span>${['🥇','🥈','🥉'][i] || `${i+1}.`} ${s.name}${s.team ? ` [${s.team}]` : ''}</span>
+      <span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${s.name}${s.team?` [${s.team}]`:''}</span>
       <span>${s.score} убийств</span>
     </div>`
   ).join('');
-
-  const waveEl = document.getElementById('endWave');
-  if (currentMode === 'survival' && data.wave) {
-    waveEl.style.display = 'block';
-    waveEl.textContent = `Дошли до волны: ${data.wave}`;
-  } else {
-    waveEl.style.display = 'none';
-  }
-
-  document.getElementById('endScreen').style.display = 'flex';
+  const wEl=document.getElementById('endWave');
+  if (currentMode==='survival'&&data.wave) {
+    wEl.style.display='block'; wEl.textContent=`🌊 Дошли до волны: ${data.wave}`;
+  } else wEl.style.display='none';
+  document.getElementById('endScreen').style.display='flex';
+  stopGame();
 });
-
 socket.on('lobbyReset', () => {
-  document.getElementById('endScreen').style.display = 'none';
+  document.getElementById('endScreen').style.display='none';
 });
 
-// ==================== УПРАВЛЕНИЕ ====================
-document.addEventListener('keydown', e => { keys[e.key] = true; e.preventDefault(); });
-document.addEventListener('keyup', e => { keys[e.key] = false; });
+// ============================================================
+//  УПРАВЛЕНИЕ — FIX: не блокировать ввод в инпутах
+// ============================================================
+function isTyping() {
+  const tag = document.activeElement?.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA';
+}
+
+document.addEventListener('keydown', e => {
+  if (isTyping()) return;
+  keys[e.code] = true;
+  // Блокировать скролл
+  if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup', e => {
+  if (isTyping()) return;
+  keys[e.code] = false;
+});
 
 canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  mouseX = e.clientX - rect.left;
-  mouseY = e.clientY - rect.top;
+  const r = canvas.getBoundingClientRect();
+  mouseX = (e.clientX - r.left) * (CANVAS_W / r.width);
+  mouseY = (e.clientY - r.top)  * (CANVAS_H / r.height);
 });
 
-canvas.addEventListener('click', () => {
-  if (!myId || isSpectator || isDead) return;
-  const me = players[myId];
-  if (!me) return;
-  const now = Date.now();
-  if (now - lastShot < SHOOT_COOLDOWN) return;
-  lastShot = now;
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  tryShoot();
+});
 
+// Автоогонь при зажатой кнопке
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+function tryShoot() {
+  if (!myId || isSpectator || isDead) return;
+  const me = players[myId]; if (!me) return;
+  const now = Date.now();
+  if (now - lastShot < SHOOT_CD) return;
+  lastShot = now;
   const angle = Math.atan2(mouseY - me.y, mouseX - me.x);
   socket.emit('shoot', { x: me.x, y: me.y, angle });
-});
+}
 
-// ==================== ИГРОВОЙ ЦИКЛ ====================
-let gameRunning = false;
-let animFrame;
-
+// ============================================================
+//  ИГРОВОЙ ЦИКЛ
+// ============================================================
+let lastTime = 0;
 function startGameLoop() {
   gameRunning = true;
-  loop();
+  lastTime = performance.now();
+  animFrame = requestAnimationFrame(loop);
 }
-
 function stopGame() {
   gameRunning = false;
-  cancelAnimationFrame(animFrame);
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame=null; }
 }
-
-function loop() {
+function loop(ts) {
   if (!gameRunning) return;
-  updateGame();
-  drawGame();
+  const dt = Math.min((ts - lastTime) / 16.67, 3); // нормализуем к 60fps
+  lastTime = ts;
+  update(dt);
+  draw();
   animFrame = requestAnimationFrame(loop);
 }
 
-function updateGame() {
-  if (!myId || !players[myId] || isSpectator || isDead) {
-    updateBullets();
-    updateParticles();
-    return;
+// ============================================================
+//  ОБНОВЛЕНИЕ
+// ============================================================
+// Проверка коллизии точки с AABB + радиус
+function collidesWall(nx, ny, r) {
+  for (const w of currentMap.walls) {
+    if (nx + r > w.x && nx - r < w.x + w.w &&
+        ny + r > w.y && ny - r < w.y + w.h) return true;
   }
+  return false;
+}
+
+let sendMoveTimer = 0;
+
+function update(dt) {
+  // Интерполяция других игроков
+  Object.entries(playerTargets).forEach(([id, tgt]) => {
+    const p = players[id]; if (!p || id===myId) return;
+    p.x = lerp(p.x, tgt.x, 0.25);
+    p.y = lerp(p.y, tgt.y, 0.25);
+    p.angle = lerpAngle(p.angle||0, tgt.angle, 0.3);
+  });
+
+  updateBullets(dt);
+  updateParticles(dt);
+
+  if (!myId || !players[myId] || isSpectator || isDead) return;
 
   const me = players[myId];
-  const speed = 3;
-  let nx = me.x, ny = me.y;
+  const speed = 3.2 * dt;
 
-  if (keys['w'] || keys['W'] || keys['ArrowUp'])    ny -= speed;
-  if (keys['s'] || keys['S'] || keys['ArrowDown'])   ny += speed;
-  if (keys['a'] || keys['A'] || keys['ArrowLeft'])   nx -= speed;
-  if (keys['d'] || keys['D'] || keys['ArrowRight'])  nx += speed;
+  let dx = 0, dy = 0;
+  // WASD + Стрелки — FIX: используем e.code
+  if (keys['KeyA'] || keys['ArrowLeft'])  dx -= 1;
+  if (keys['KeyD'] || keys['ArrowRight']) dx += 1;
+  if (keys['KeyW'] || keys['ArrowUp'])    dy -= 1;
+  if (keys['KeyS'] || keys['ArrowDown'])  dy += 1;
 
-  nx = Math.max(20, Math.min(880, nx));
-  ny = Math.max(20, Math.min(560, ny));
+  // Нормализация диагонали
+  if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
 
-  // Коллизия со стенами
-  let blocked = false;
-  for (const w of WALLS) {
-    if (nx > w.x - 18 && nx < w.x + w.w + 18 &&
-        ny > w.y - 18 && ny < w.y + w.h + 18) {
-      blocked = true;
-      break;
-    }
+  let nx = me.x + dx * speed;
+  let ny = me.y + dy * speed;
+
+  // Границы
+  nx = Math.max(PLAYER_R+2, Math.min(CANVAS_W - PLAYER_R-2, nx));
+  ny = Math.max(PLAYER_R+2, Math.min(CANVAS_H - PLAYER_R-2, ny));
+
+  // Скользящая коллизия со стенами
+  if (!collidesWall(nx, ny, PLAYER_R)) {
+    me.x = nx; me.y = ny;
+  } else if (!collidesWall(nx, me.y, PLAYER_R)) {
+    me.x = nx;
+  } else if (!collidesWall(me.x, ny, PLAYER_R)) {
+    me.y = ny;
   }
-
-  if (!blocked) { me.x = nx; me.y = ny; }
 
   me.angle = Math.atan2(mouseY - me.y, mouseX - me.x);
 
-  socket.emit('move', { x: me.x, y: me.y, angle: me.angle });
+  // Отправка с троттлингом (20 раз в сек)
+  sendMoveTimer += dt;
+  if (sendMoveTimer >= 3) {
+    sendMoveTimer = 0;
+    socket.emit('move', { x: Math.round(me.x), y: Math.round(me.y), angle: me.angle });
+  }
 
-  // Проверка попаданий клиентских пуль
+  // Автоогонь
+  if (keys['Space'] || keys['Mouse0']) tryShoot();
+
+  // Проверка попаданий
   checkClientHits();
-  updateBullets();
-  updateParticles();
 }
 
 function checkClientHits() {
-  if (!myId || !players[myId]) return;
-
+  const me = players[myId]; if (!me) return;
   bullets.forEach(b => {
-    if (b.ownerId !== myId || b.isBot) return;
-
-    // Попадание в игрока
-    Object.values(players).forEach(target => {
-      if (target.id === myId || target.isDead) return;
-      if (currentMode === 'team' && target.team === players[myId]?.team) return;
-      const dx = b.x - target.x, dy = b.y - target.y;
-      if (Math.sqrt(dx*dx + dy*dy) < 20 && !b.used) {
+    if (b.ownerId !== myId || b.isBot || b.used) return;
+    Object.values(players).forEach(t => {
+      if (t.id===myId || t.isDead) return;
+      if (currentMode==='team' && t.team===me.team) return;
+      if (dist(b.x,b.y,t.x,t.y) < PLAYER_R+4) {
         b.used = true;
-        socket.emit('hitPlayer', { targetId: target.id });
-        spawnParticles(b.x, b.y, '#ff8800', 8);
+        socket.emit('hitPlayer', { targetId: t.id });
+        spawnParticles(b.x, b.y, '#ff8800', 10);
       }
     });
   });
 }
 
-function updateBullets() {
-  bullets = bullets.filter(b => {
-    b.x += b.velX;
-    b.y += b.velY;
-    b.life--;
+function updateBullets(dt) {
+  for (let i = bullets.length-1; i >= 0; i--) {
+    const b = bullets[i];
+    b.x += b.velX * dt;
+    b.y += b.velY * dt;
+    b.life -= dt;
+    if (b.life <= 0 || b.x<0 || b.x>CANVAS_W || b.y<0 || b.y>CANVAS_H) {
+      bullets.splice(i,1); continue;
+    }
+    if (collidesWall(b.x, b.y, 4)) {
+      spawnParticles(b.x, b.y, '#8888ff', 5);
+      bullets.splice(i,1); continue;
+    }
+    if (b.used) { bullets.splice(i,1); }
+  }
+}
 
-    if (b.life <= 0 || b.x < 0 || b.x > 900 || b.y < 0 || b.y > 600) return false;
+function updateParticles(dt) {
+  for (let i = particles.length-1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.vx *= 0.88; p.vy *= 0.88;
+    p.life -= dt;
+    if (p.life <= 0) particles.splice(i,1);
+  }
+}
 
-    // Стена
-    for (const w of WALLS) {
-      if (b.x > w.x && b.x < w.x + w.w && b.y > w.y && b.y < w.y + w.h) {
-        spawnParticles(b.x, b.y, '#aaaaff', 4);
-        return false;
-      }
+// ============================================================
+//  ОТРИСОВКА
+// ============================================================
+// Кэш текстур игрока
+const playerCache = {};
+
+function draw() {
+  ctx.fillStyle = currentMap.bg;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  drawGrid();
+  drawWalls();
+  drawShadows();
+
+  Object.values(bots).forEach(drawBot);
+  Object.values(players).forEach(p => drawPlayer(p, p.id===myId));
+  drawBullets();
+  drawParticles();
+  drawCrosshair();
+  drawMiniHUD();
+}
+
+function drawGrid() {
+  ctx.strokeStyle = currentMap.grid;
+  ctx.lineWidth = 1;
+  const step = 50;
+  for (let x=0; x<CANVAS_W; x+=step) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,CANVAS_H); ctx.stroke();
+  }
+  for (let y=0; y<CANVAS_H; y+=step) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(CANVAS_W,y); ctx.stroke();
+  }
+}
+
+function drawWalls() {
+  currentMap.walls.forEach(w => {
+    // Тень стены
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(w.x+4, w.y+4, w.w, w.h);
+
+    // Основное тело
+    ctx.fillStyle = currentMap.wallFill;
+    ctx.fillRect(w.x, w.y, w.w, w.h);
+
+    // Боковая грань (3D эффект)
+    if (w.w > w.h) {
+      // горизонтальная стена — рисуем нижнюю грань
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(w.x, w.y+w.h, w.w, 5);
+    } else {
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(w.x+w.w, w.y, 5, w.h);
     }
 
-    return !b.used;
-  });
-}
-
-function updateParticles() {
-  particles = particles.filter(p => {
-    p.x += p.vx; p.y += p.vy;
-    p.vx *= 0.9; p.vy *= 0.9;
-    p.life--;
-    return p.life > 0;
-  });
-}
-
-// ==================== ОТРИСОВКА ====================
-function drawGame() {
-  // Фон
-  ctx.fillStyle = '#0f0f1e';
-  ctx.fillRect(0, 0, 900, 580);
-
-  // Сетка
-  ctx.strokeStyle = '#14142e';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < 900; x += 40) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 580); ctx.stroke();
-  }
-  for (let y = 0; y < 580; y += 40) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke();
-  }
-
-  // Стены
-  WALLS.forEach(w => {
-    ctx.fillStyle = '#1e2d4a';
-    ctx.fillRect(w.x, w.y, w.w, w.h);
-    ctx.strokeStyle = '#2a4060';
-    ctx.lineWidth = 2;
+    // Обводка
+    ctx.strokeStyle = currentMap.wallStroke;
+    ctx.lineWidth = 1.5;
     ctx.strokeRect(w.x, w.y, w.w, w.h);
 
-    // Блик
-    ctx.fillStyle = 'rgba(60,80,120,0.3)';
-    ctx.fillRect(w.x, w.y, w.w, 4);
+    // Верхний блик
+    ctx.fillStyle = currentMap.wallTop;
+    ctx.fillRect(w.x, w.y, w.w, Math.min(5, w.h));
+
+    // Внутренняя деталь (кирпич/панель)
+    if (w.w >= 40 && w.h >= 40) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(w.x+4, w.y+4, w.w-8, w.h-8);
+    }
   });
+}
 
-  // Боты
-  Object.values(bots).forEach(drawBot);
-
-  // Игроки
-  Object.values(players).forEach(p => drawPlayer(p, p.id === myId));
-
-  // Пули
-  bullets.forEach(b => {
-    const alpha = b.life / 80;
-
-    // Трейл
+function drawShadows() {
+  // Небольшие тени под игроками
+  Object.values(players).forEach(p => {
+    if (!p || p.isDead) return;
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.moveTo(b.x, b.y);
-    ctx.lineTo(b.x - b.velX * 6, b.y - b.velY * 6);
-    ctx.strokeStyle = b.isBot
-      ? `rgba(255,80,80,${alpha * 0.4})`
-      : `rgba(255,200,0,${alpha * 0.4})`;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Пуля
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = b.isBot ? '#ff5050' : '#ffcc00';
+    ctx.ellipse(p.x, p.y+PLAYER_R+2, PLAYER_R*0.9, 5, 0, 0, Math.PI*2);
     ctx.fill();
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = b.isBot ? '#ff0000' : '#ffaa00';
-    ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.restore();
   });
-
-  // Частицы
-  particles.forEach(p => {
-    const alpha = p.life / p.maxLife;
-    ctx.globalAlpha = alpha;
+  Object.values(bots).forEach(b => {
+    if (!b) return;
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * alpha + 1, 0, Math.PI * 2);
-    ctx.fillStyle = p.color;
+    ctx.ellipse(b.x, b.y+PLAYER_R+2, PLAYER_R*0.9, 5, 0, 0, Math.PI*2);
     ctx.fill();
+    ctx.restore();
   });
-  ctx.globalAlpha = 1;
-
-  updatePlayerCountHUD();
 }
 
 function drawPlayer(p, isMe) {
   if (!p) return;
-
   ctx.save();
   ctx.translate(p.x, p.y);
 
   if (p.isDead) {
-    ctx.globalAlpha = 0.3;
-    ctx.rotate(Math.PI / 2);
+    ctx.globalAlpha = 0.25;
+    ctx.rotate(Math.PI/2);
   } else {
-    ctx.rotate(p.angle);
+    ctx.rotate(p.angle || 0);
   }
 
-  // Тело
-  const teamColor = p.team === 'red' ? '#ff4444' : p.team === 'blue' ? '#4488ff' : (p.color || '#4af');
-  const bodyColor = p.isDead ? '#555' : teamColor;
+  const teamColor = p.team==='red' ? '#ff3333' : p.team==='blue' ? '#3366ff' : (p.color||'#44aaff');
 
+  // ---- ТЕЛО (круглое, с градиентом) ----
+  const grad = ctx.createRadialGradient(-4, -4, 2, 0, 0, PLAYER_R);
+  grad.addColorStop(0, lighten(teamColor, 40));
+  grad.addColorStop(1, p.isDead ? '#333' : darken(teamColor, 30));
   ctx.beginPath();
-  ctx.arc(0, 0, 17, 0, Math.PI * 2);
-  ctx.fillStyle = bodyColor;
+  ctx.arc(0, 0, PLAYER_R, 0, Math.PI*2);
+  ctx.fillStyle = p.isDead ? '#444' : grad;
   ctx.fill();
 
-  // Обводка (свой игрок — белая)
-  ctx.strokeStyle = isMe ? '#ffffff' : 'rgba(0,0,0,0.5)';
+  // Контур
+  ctx.strokeStyle = isMe ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.5)';
   ctx.lineWidth = isMe ? 2.5 : 1.5;
   ctx.stroke();
 
+  // Блик
   if (!p.isDead) {
-    // Оружие
-    ctx.fillStyle = '#888';
-    ctx.fillRect(10, -4, 18, 8);
-    ctx.fillStyle = '#aaa';
-    ctx.fillRect(22, -3, 8, 6);
+    ctx.beginPath();
+    ctx.arc(-5, -6, 6, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fill();
+
+    // ---- ОРУЖИЕ ----
+    drawGun(ctx, isMe);
   }
 
   ctx.restore();
   ctx.globalAlpha = 1;
 
+  // Имя над игроком
   if (!p.isDead) {
-    // Имя
-    ctx.fillStyle = isMe ? '#ffffff' : '#cccccc';
-    ctx.font = `${isMe ? 'bold ' : ''}12px Courier New`;
-    ctx.textAlign = 'center';
-    ctx.fillText(p.name || 'Player', p.x, p.y - 26);
+    drawNameTag(ctx, p, isMe);
+    drawHPBar(ctx, p.x, p.y - PLAYER_R - 10, 44, p.health||0, 100, false);
+  }
+}
 
-    // HP бар
-    const bw = 44, bx = p.x - bw/2, by = p.y - 22;
-    ctx.fillStyle = '#222';
-    ctx.fillRect(bx, by, bw, 5);
-    const hp = (p.health || 0) / 100;
-    ctx.fillStyle = hp > 0.6 ? '#33ff99' : hp > 0.3 ? '#ffaa00' : '#ff4444';
-    ctx.fillRect(bx, by, bw * hp, 5);
+function drawGun(ctx, isMe) {
+  // Рукоять
+  ctx.fillStyle = '#555';
+  ctx.beginPath();
+  ctx.roundRect(6, -5, 22, 10, 2);
+  ctx.fill();
 
-    // Прицел у своего игрока
-    if (isMe) {
-      const dist = 35;
-      const ex = p.x + Math.cos(p.angle) * dist;
-      const ey = p.y + Math.sin(p.angle) * dist;
-      ctx.beginPath();
-      ctx.arc(ex, ey, 4, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
+  // Дуло
+  ctx.fillStyle = '#333';
+  ctx.beginPath();
+  ctx.roundRect(20, -3.5, 12, 7, 1.5);
+  ctx.fill();
+
+  // Дульная вспышка (если мы только что выстрелили)
+  const elapsed = Date.now() - lastShot;
+  if (isMe && elapsed < 80) {
+    ctx.save();
+    const alpha = 1 - elapsed/80;
+    ctx.globalAlpha = alpha;
+    const flashGrad = ctx.createRadialGradient(34,0,0, 34,0,10);
+    flashGrad.addColorStop(0, '#ffffff');
+    flashGrad.addColorStop(0.4, '#ffcc00');
+    flashGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = flashGrad;
+    ctx.beginPath();
+    ctx.arc(34, 0, 10, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Боковая деталь
+  ctx.fillStyle = '#666';
+  ctx.fillRect(10, -3, 8, 2);
+
+  // Прицельная планка
+  ctx.fillStyle = '#888';
+  ctx.fillRect(12, -6, 3, 2);
+  ctx.fillRect(22, -6, 3, 2);
+}
+
+function drawNameTag(ctx, p, isMe) {
+  const name = p.name || 'Player';
+  ctx.font = `${isMe?'bold ':''}12px Courier New`;
+  ctx.textAlign = 'center';
+  const tw = ctx.measureText(name).width;
+
+  // Фон
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.beginPath();
+  ctx.roundRect(p.x - tw/2 - 5, p.y - PLAYER_R - 24, tw+10, 16, 4);
+  ctx.fill();
+
+  ctx.fillStyle = isMe ? '#ffffff' : '#ccddff';
+  ctx.fillText(name, p.x, p.y - PLAYER_R - 11);
+}
+
+function drawHPBar(ctx, cx, cy, w, hp, maxHp, isBot) {
+  const frac  = Math.max(0, hp/maxHp);
+  const bx    = cx - w/2;
+  const color = isBot
+    ? `hsl(${frac*60},90%,50%)`
+    : frac>0.6 ? '#33ff99' : frac>0.3 ? '#ffaa00' : '#ff3333';
+
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.beginPath(); ctx.roundRect(bx-1, cy-1, w+2, 7, 3); ctx.fill();
+
+  ctx.fillStyle = '#1a1a3a';
+  ctx.beginPath(); ctx.roundRect(bx, cy, w, 5, 2); ctx.fill();
+
+  if (frac > 0) {
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.roundRect(bx, cy, w*frac, 5, 2); ctx.fill();
   }
 }
 
@@ -1308,109 +1309,254 @@ function drawBot(bot) {
   if (!bot) return;
   ctx.save();
   ctx.translate(bot.x, bot.y);
-  ctx.rotate(bot.angle);
+  ctx.rotate(bot.angle || 0);
 
-  // Тело бота
-  ctx.beginPath();
-  ctx.arc(0, 0, 17, 0, Math.PI * 2);
-
-  // Цвет зависит от волны
   const wave = bot.wave || 1;
-  const hue = Math.max(0, 30 - wave * 5);
-  ctx.fillStyle = `hsl(${hue}, 90%, 45%)`;
+  const hue  = Math.max(0, 15 - wave*3);
+  const bodyColor = `hsl(${hue},85%,40%)`;
+  const edgeColor = `hsl(${hue},90%,55%)`;
+
+  // Тело (восьмиугольник — брутальный вид)
+  ctx.beginPath();
+  const r = 16;
+  for (let i=0; i<8; i++) {
+    const a = (i/8)*Math.PI*2 - Math.PI/8;
+    i===0 ? ctx.moveTo(Math.cos(a)*r, Math.sin(a)*r)
+           : ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+  }
+  ctx.closePath();
+
+  const grad = ctx.createRadialGradient(-3,-3,1, 0,0,r);
+  grad.addColorStop(0, edgeColor);
+  grad.addColorStop(1, bodyColor);
+  ctx.fillStyle = grad;
   ctx.fill();
   ctx.strokeStyle = '#ff0000';
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Тело бота (квадратное)
-  ctx.fillStyle = '#cc2222';
-  ctx.fillRect(-12, -12, 24, 24);
-  ctx.fillStyle = `hsl(${hue}, 90%, 35%)`;
-  ctx.fillRect(-10, -10, 20, 20);
+  // Глаза
+  ctx.fillStyle = '#ff3300';
+  ctx.beginPath(); ctx.arc(4, -5, 3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4,  5, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ff6600';
+  ctx.beginPath(); ctx.arc(5, -5, 1.5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5,  5, 1.5, 0, Math.PI*2); ctx.fill();
 
-  // Оружие
-  ctx.fillStyle = '#555';
-  ctx.fillRect(8, -3, 16, 6);
+  // Оружие бота
+  ctx.fillStyle = '#442222';
+  ctx.beginPath(); ctx.roundRect(10, -4, 18, 8, 2); ctx.fill();
+  ctx.fillStyle = '#221111';
+  ctx.beginPath(); ctx.roundRect(22, -3, 10, 6, 1); ctx.fill();
 
   ctx.restore();
 
-  // Имя
-  ctx.fillStyle = '#ff8888';
-  ctx.font = '11px Courier New';
+  // Имя и HP
+  ctx.fillStyle = '#ff6666';
+  ctx.font = '10px Courier New';
   ctx.textAlign = 'center';
-  ctx.fillText('☠ ' + (bot.name || 'BOT'), bot.x, bot.y - 26);
-
-  // HP
-  const bw = 44, bx = bot.x - bw/2, by = bot.y - 22;
-  ctx.fillStyle = '#2a0000';
-  ctx.fillRect(bx, by, bw, 5);
-  const hp = (bot.health || 0) / (bot.maxHealth || 100);
-  ctx.fillStyle = `hsl(${hp * 60}, 90%, 50%)`;
-  ctx.fillRect(bx, by, bw * Math.max(0, hp), 5);
+  ctx.fillText(`☠ ${bot.name||'BOT'}`, bot.x, bot.y - PLAYER_R - 12);
+  drawHPBar(ctx, bot.x, bot.y - PLAYER_R - 10, 44, bot.health||0, bot.maxHealth||100, true);
 }
 
-// ==================== HUD ФУНКЦИИ ====================
-function updateHUD() {
-  document.getElementById('healthFill').style.width = myHealth + '%';
-  document.getElementById('healthNum').textContent = myHealth;
+function drawBullets() {
+  bullets.forEach(b => {
+    const alpha = Math.min(1, b.life / 20);
+    const isBot = b.isBot;
+    const col1  = isBot ? '#ff5050' : '#ffee44';
+    const col2  = isBot ? '#ff0000' : '#ff8800';
+
+    // Трейл
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - b.velX*5, b.y - b.velY*5);
+    ctx.strokeStyle = isBot ? `rgba(255,60,60,${alpha*0.5})` : `rgba(255,200,0,${alpha*0.5})`;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Ядро
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 5);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.3, col1);
+    grad.addColorStop(1, col2);
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 4, 0, Math.PI*2);
+    ctx.fillStyle = grad;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = col1;
+    ctx.fill();
+    ctx.restore();
+  });
 }
 
-function updatePlayerCountHUD() {
-  const total = Object.keys(players).length + Object.keys(bots).length;
-  document.getElementById('playerCountHud').textContent = `👥 ${Object.keys(players).length}`;
+function drawParticles() {
+  particles.forEach(p => {
+    const alpha = p.life / p.maxLife;
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, Math.max(0.5, p.size * alpha), 0, Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = p.color;
+    ctx.fill();
+    ctx.restore();
+  });
 }
 
-function updateScorePanel() {
-  const list = document.getElementById('scoreList');
-  const sorted = Object.values(players).sort((a, b) => (b.score || 0) - (a.score || 0));
-  list.innerHTML = sorted.map(p => {
-    let cls = p.id === myId ? 'me' : '';
-    if (p.team) cls += ` team-${p.team}`;
-    return `<div class="score-row ${cls}">
-      <span>${p.id === myId ? '▶' : ''} ${p.name}</span>
-      <span>${p.score || 0}💀</span>
-    </div>`;
-  }).join('');
+function drawCrosshair() {
+  if (!myId || isSpectator || isDead) return;
+  const x = mouseX, y = mouseY;
+  const me = players[myId];
+  if (!me) return;
+
+  // Линия прицела (слабая)
+  ctx.save();
+  ctx.setLineDash([4,8]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(me.x, me.y); ctx.lineTo(x, y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Крестик
+  const s = 10, g = 4;
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x-s, y); ctx.lineTo(x-g, y);
+  ctx.moveTo(x+g, y); ctx.lineTo(x+s, y);
+  ctx.moveTo(x, y-s); ctx.lineTo(x, y-g);
+  ctx.moveTo(x, y+g); ctx.lineTo(x, y+s);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(x, y, 2, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fill();
 }
 
-function addKillFeed(killer, victim, isMe) {
-  const feed = document.getElementById('killFeed');
-  const msg = document.createElement('div');
-  msg.className = 'kill-msg';
-  msg.style.borderColor = isMe ? '#ffcc00' : '#ff4444';
-  msg.innerHTML = `${isMe ? '💀' : '🔫'} <b>${killer}</b> → ${victim}`;
-  feed.appendChild(msg);
-  setTimeout(() => msg.remove(), 3000);
+function drawMiniHUD() {
+  // Счётчик игроков
+  const cnt = Object.keys(players).length;
+  document.getElementById('playerCountHud').textContent = `👥 ${cnt}`;
+}
+
+// ============================================================
+//  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================================
+function lerp(a, b, t)   { return a + (b-a)*t; }
+function lerpAngle(a,b,t){
+  let d = b-a;
+  while (d >  Math.PI) d -= Math.PI*2;
+  while (d < -Math.PI) d += Math.PI*2;
+  return a + d*t;
+}
+function dist(x1,y1,x2,y2){ return Math.sqrt((x2-x1)**2+(y2-y1)**2); }
+
+function lighten(hex, amt) {
+  const n = parseInt(hex.replace('#',''),16);
+  const r = Math.min(255,(n>>16)+amt);
+  const g = Math.min(255,((n>>8)&0xff)+amt);
+  const b = Math.min(255,(n&0xff)+amt);
+  return `rgb(${r},${g},${b})`;
+}
+function darken(hex, amt) { return lighten(hex, -amt); }
+
+function spawnParticles(x, y, color, count) {
+  for (let i=0; i<count; i++) {
+    const a = Math.random()*Math.PI*2;
+    const s = Math.random()*4+1;
+    particles.push({
+      x, y, color,
+      vx: Math.cos(a)*s, vy: Math.sin(a)*s,
+      life: 30+Math.random()*25, maxLife: 55,
+      size: Math.random()*3+1.5
+    });
+  }
 }
 
 function showWaveAnnounce(text) {
   const el = document.getElementById('waveAnnounce');
   document.getElementById('waveText').textContent = text;
   el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 2500);
+  setTimeout(() => el.style.display='none', 2600);
 }
 
-// ==================== ЧАСТИЦЫ ====================
-function spawnParticles(x, y, color, count) {
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 5 + 1;
-    particles.push({
-      x, y, color,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 35 + Math.random() * 20,
-      maxLife: 55,
-      size: Math.random() * 4 + 2
-    });
-  }
+function addKillFeed(killer, victim, isMe) {
+  const feed = document.getElementById('killFeed');
+  const msg  = document.createElement('div');
+  msg.className = 'kill-msg';
+  msg.style.borderColor = isMe ? '#ffcc00' : '#ff4444';
+  msg.innerHTML = `${isMe?'💀':'🔫'} <b>${killer}</b> → ${victim}`;
+  feed.appendChild(msg);
+  setTimeout(() => msg.remove(), 3000);
 }
 
-// ==================== ENTER В МЕНЮ ====================
-document.getElementById('playerName').addEventListener('keypress', e => {
-  if (e.key === 'Enter') goToLobbyList();
-});
+function updateHUD() {
+  document.getElementById('healthFill').style.width   = myHealth+'%';
+  document.getElementById('healthNum').textContent    = myHealth;
+  // Цвет HP бара
+  const hf = document.getElementById('healthFill');
+  hf.style.background = myHealth>50
+    ? 'linear-gradient(90deg,#22dd44,#33ff99)'
+    : myHealth>25
+    ? 'linear-gradient(90deg,#ff8800,#ffcc00)'
+    : 'linear-gradient(90deg,#ff2244,#ff6600)';
+}
+
+function updateScorePanel() {
+  const sorted = Object.values(players).sort((a,b)=>(b.score||0)-(a.score||0));
+  document.getElementById('scoreList').innerHTML = sorted.map(p => {
+    let cls = p.id===myId ? 'me' : '';
+    if (p.team) cls += ` team-${p.team}`;
+    return `<div class="score-row ${cls}">
+      <span class="score-name">${p.id===myId?'▶ ':''}${p.name||'?'}</span>
+      <span>${p.score||0}💀</span>
+    </div>`;
+  }).join('');
+}
+
+function startRespawnCountdown(sec) {
+  const bar = document.getElementById('respawnBar');
+  const cnt = document.getElementById('respawnCount');
+  bar.style.display = 'block';
+  cnt.textContent = sec;
+  const iv = setInterval(() => {
+    sec--;
+    cnt.textContent = sec;
+    if (sec <= 0) { clearInterval(iv); bar.style.display='none'; }
+  }, 1000);
+}
+
+let flashTimeout = null;
+function screenFlash(color) {
+  const ov = document.getElementById('deathOverlay');
+  ov.style.background = color;
+  ov.style.display = 'block';
+  if (flashTimeout) clearTimeout(flashTimeout);
+  flashTimeout = setTimeout(() => {
+    if (!isDead) ov.style.display = 'none';
+  }, 300);
+}
+
+// roundRect polyfill
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
+    r = Math.min(r, w/2, h/2);
+    this.beginPath();
+    this.moveTo(x+r, y);
+    this.lineTo(x+w-r, y); this.arcTo(x+w,y,x+w,y+r,r);
+    this.lineTo(x+w, y+h-r); this.arcTo(x+w,y+h,x+w-r,y+h,r);
+    this.lineTo(x+r, y+h); this.arcTo(x,y+h,x,y+h-r,r);
+    this.lineTo(x, y+r); this.arcTo(x,y,x+r,y,r);
+    this.closePath();
+  };
+}
 </script>
 </body>
 </html>
