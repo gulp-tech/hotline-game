@@ -5,78 +5,49 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HOTLINE HTML</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:#000;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;width:100vw;}
-canvas{display:block; image-rendering: pixelated;}
+    body { background:#000; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; width:100vw; }
+    canvas { display:block; image-rendering: pixelated; }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
 <script>
-"use strict";
-
-// 1. СНАЧАЛА ОБЪЯВЛЯЕМ ПЕРЕМЕННЫЕ
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-let W, H;
-let cur = null;
-const sts = {};
-let evQ = [];
-const keys = {};
-const mouse = {x: 0, y: 0, btn:[0,0,0]};
-
-// 2. СЮДА ВСТАВЬТЕ ВЕСЬ ВАШ ИГРОВОЙ КОД (Классы, Функции, const G)
-// ... ВАШ КОД ИГРЫ ...
-
-// 3. ИСПРАВЛЕННАЯ ФУНКЦИЯ RESIZE
-function resize(){
-    W = Math.min(window.innerWidth, 1920);
-    H = Math.min(window.innerHeight, 1080);
-    canvas.width = W; 
-    canvas.height = H;
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-    if(typeof vigC !== 'undefined') vigC = null;
-    if(cur && cur.name === 'menu') sts.menu._mk();
-}
-window.addEventListener('resize', resize);
-resize(); // Запускаем один раз сразу после создания canvas
-
-// 4. МУЛЬТИПЛЕЕР
-const socket = io('https://hotline-game.onrender.com');
-const otherPlayers = {};
-socket.on('updatePlayer', (data) => { otherPlayers[data.id] = data; });
-socket.on('playerLeft', (id) => { delete otherPlayers[id]; });
-
-setInterval(() => {
-  if(typeof G !== 'undefined' && G.pA) {
-    socket.emit('playerMove', {x: G.px, y: G.py, angle: G.pa});
-  }
-}, 50);
-
-// 5. ЗАПУСК
-chg('menu'); 
-
-// 6. ЦИКЛ ИГРЫ (ВАШ ОРИГИНАЛЬНЫЙ LOOP)
-let lastT=performance.now();
-function loop(now){
-    const raw=(now-lastT)/1e3; lastT=now;
-    const dt=Math.min(raw,.05);
-    const ev=[...evQ]; evQ=[];
-    if(cur){ cur.handleEvents(ev); cur.update(dt); cur.draw(); }
+// Ждем полной загрузки страницы, чтобы canvas точно существовал
+window.onload = function() {
     
-    // Отрисовка других игроков
-    if (typeof G !== 'undefined' && G.cam) {
-        for(const id in otherPlayers){
-            const p = otherPlayers[id];
-            CR.draw(p.x-G.cam[0], p.y-G.cam[1], p.angle, '#f00', '#fff', '#f00', {mv:0});
-        }
-    }
-    requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
+    // --- 1. СЮДА ВСТАВЬТЕ ВЕСЬ ВАШ ОРИГИНАЛЬНЫЙ КОД (ВЕСЬ JS) ---
+    // (начиная с const canvas=... и до конца)
+    // ВАЖНО: Уберите оттуда вызов chg('menu') и requestAnimationFrame(loop) 
+    // если они там есть, мы вызовем их ниже.
 
+    // --- 2. МУЛЬТИПЛЕЕР (ДОБАВИТЬ ВНИЗУ) ---
+    const socket = io('https://hotline-game.onrender.com');
+    const otherPlayers = {};
+    socket.on('updatePlayer', (data) => { otherPlayers[data.id] = data; });
+    socket.on('playerLeft', (id) => { delete otherPlayers[id]; });
+
+    setInterval(() => {
+        if(typeof G !== 'undefined' && G.pA) {
+            socket.emit('playerMove', {x: G.px, y: G.py, angle: G.pa});
+        }
+    }, 50);
+
+    // --- 3. ФУНКЦИЯ ОПТИМИЗАЦИИ (ВМЕСТО ВАШЕЙ) ---
+    window.addEventListener('resize', () => {
+        let W = Math.min(window.innerWidth, 1920);
+        let H = Math.min(window.innerHeight, 1080);
+        canvas.width = W; canvas.height = H;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        if(cur && cur.name === 'menu') sts.menu._mk();
+    });
+
+    // --- 4. ЗАПУСК ---
+    chg('menu');
+    requestAnimationFrame(loop);
+};
 </script>
 </body>
 </html>
