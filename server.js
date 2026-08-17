@@ -544,4 +544,136 @@ io.on('connection', socket => {
   });
 
   socket.on('startSolo', () => {
-    const player=players[socket.id]
+    const player=players[socket.id];
+    if (!player) return;
+    
+    const lobby = createLobby(GAME_MODES.SURVIVAL, 'Solo Mode', true);
+    lobby.maxPlayers = 1; lobby.minToStart = 1;
+    
+    player.lobbyId=lobby.id;
+    socket.join(lobby.id);
+    lobby.players[socket.id]=player;
+    
+    socket.emit('joinedLobby', {lobbyId: lobby.id, mode: lobby.mode, name: lobby.name});
+    startCountdown(lobby.id);
+  });
+
+  socket.on('playerMove', data=>{
+    const p=players[socket.id]; if (!p||!data) return;
+    p.x=Math.max(25,Math.min(875,data.x));
+    p.y=Math.max(25,Math.min(555,data.y));
+    p.angle=data.angle;
+  });
+
+  socket.on('playerShoot', data=>{
+    const p=players[socket.id]; if (!p||!p.lobbyId) return;
+    const lobby=lobbies[p.lobbyId]; if(!lobby) return;
+    if (p.isDead) return;
+    
+    const w = WEAPONS[data.weapon];
+    if (!w) return;
+    
+    const now = Date.now();
+    if (now - p.lastShot < w.cd) return;
+    p.lastShot = now;
+    p.weapon = data.weapon;
+
+    if (w.melee) {
+      Object.values(lobby.bots).forEach(bot=>{
+        if (Math.hypot(bot.x-p.x, bot.y-p.y) < w.range) {
+          bot.health -= w.damage;
+          if (bot.health <= 0) {
+            p.score++; p.kills++; addXP(p, 50+lobby.wave*10);
+            delete lobby.bots[bot.id];
+            if (Object.keys(lobby.bots).length===0&&lobby.mode===GAME_MODES.SURVIVAL) {
+              lobby.wave++; setTimeout(()=>spawnWave(lobby.id),3000);
+            }
+          }
+        }
+      });
+      return;
+    }
+
+    for(let i=0; i<w.bullets; i++) {
+      const spread = (Math.random()-0.5) * w.spread * 2;
+      const angle = data.angle + spread;
+      lobby.bullets.push({
+        id:`pb_${now}_${i}_${Math.random().toString(36).slice(2,5)}`,
+        ownerId:p.id, ownerName:p.name, isBot:false,
+        x:p.x, y:p.y, angle:angle,
+        velX:Math.cos(angle)*w.speed, velY:Math.sin(angle)*w.speed,
+        speed:w.speed, damage:w.damage, weapon:data.weapon,
+        explosive:w.explosive||false, life:90
+      });
+    }
+  });
+
+  socket.on('pickupItem', pickupId => {
+    const p = players[socket.id]; if(!p || !p.lobbyId) return;
+    const lobby = lobbies[p.lobbyId]; if(!lobby) return;
+    const pk = lobby.pickups.find(x => x.id === pickupId);
+    if (!pk || !pk.active) return;
+    
+    if (Math.hypot(p.x-pk.x, p.y-pk.y) > 50) return;
+
+    if (pk.type === 'health') p.health = Math.min(100, p.health + 50);
+    else p.weapon = pk.type;
+
+    pk.active = false; pk.respawnTimer = 600; // 30 sec at 20 ticks
+  });
+
+  socket.on('takeFlag', team => {
+    const p = players[socket.id]; if(!p || !p.lobbyId) return;
+    const lobby = lobbies[p.lobbyId]; if(!lobby || lobby.mode !== GAME_MODES.CTF) return;
+    const flag = lobby.flags[team];
+    if (!flag || flag.ownerId) return;
+    if (p.team === team) return; // Нельзя брать свой флаг
+    if (Math.hypot(p.x-flag.x, p.y-flag.y) > 40) return;
+    flag.ownerId = p.id;
+    p.hasFlag = true;
+  });
+
+  socket.on('chat', msg => {
+    const p = players[socket.id]; if(!p || !p.lobbyId) return;
+    io.to(p.lobbyId).emit('chat', {name: p.name, msg: String(msg).substring(0,80)});
+  });
+
+  socket.on('leaveLobby', () => {
+    const p = players[socket.id];
+    if (p && p.lobbyId) {
+      const lobby = lobbies[p.lobbyId];
+      if (lobby) {
+        delete lobby.players[socket.id];
+        if (Object.keys(lobby.players).length === 0 && !lobby.isSolo) {
+          clearInterval(lobby.loopInterval); clearInterval(lobby.gameTimer); clearInterval(lobby.countdownTimer);
+          delete lobbies[p.lobbyId];
+        } else if (lobby.isSolo) {
+          clearInterval(lobby.loopInterval); clearInterval(lobby.gameTimer); clearInterval(lobby.countdownTimer);
+          delete lobbies[p.lobbyId];
+        }
+      }
+      socket.leave(p.lobbyId);
+      p.lobbyId = null;
+      broadcastLobbyList();
+    }
+  });
+
+  socket.on('disconnect', () => {
+    const p = players[socket.id];
+    if (p && p.lobbyId) {
+      const lobby = lobbies[p.lobbyId];
+      if (lobby) {
+        delete lobby.players[socket.id];
+        if (Object.keys(lobby.players).length === 0) {
+          clearInterval(lobby.loopInterval); clearInterval(lobby.gameTimer); clearInterval(lobby.countdownTimer);
+          delete lobbies[p.lobbyId];
+        }
+      }
+    }
+    delete players[socket.id];
+    broadcastLobbyList();
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
