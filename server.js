@@ -394,7 +394,6 @@ function startGameLoop(lobbyId) {
             flag.ownerId=null;
           } else {
             flag.x=carrier.x; flag.y=carrier.y;
-            // Проверка доставки
             if (carrier.team === team && Math.hypot(carrier.x-flag.baseX, carrier.y-flag.baseY) < 40) {
                 lobby.kingScore[team] = (lobby.kingScore[team]||0) + 1;
                 flag.ownerId = null;
@@ -407,11 +406,11 @@ function startGameLoop(lobbyId) {
       });
     }
 
-    // --- ОТПРАВКА СОСТОЯНИЯ (ОПТИМИЗИРОВАНО) ---
+    // --- ОТПРАВКА СОСТОЯНИЯ ---
     const state = {
       players: Object.values(lobby.players).map(p => ({id:p.id, x:p.x, y:p.y, angle:p.angle, health:p.health, isDead:p.isDead, score:p.score, kills:p.kills, weapon:p.weapon, team:p.team, name:p.name, hasFlag:p.hasFlag, level:p.level})),
       bots: Object.values(lobby.bots).map(b => ({id:b.id, x:b.x, y:b.y, angle:b.angle, health:b.health, weapon:b.weapon})),
-      bullets: lobby.bullets.map(b => ({id:b.id, x:b.x, y:b.y, isBot:b.isBot})),
+      bullets: lobby.bullets.map(b => ({id:b.id, x:b.x, y:b.y, isBot:b.isBot, weapon:b.weapon})),
       explosions: lobby.explosions,
       barrels: lobby.barrels,
       pickups: lobby.pickups,
@@ -516,10 +515,16 @@ io.on('connection', socket => {
     xp:0, level:1, lastShot:0
   };
 
-  socket.emit('lobbyList',Object.values(lobbies).filter(l => !l.isSolo).map(l=>({
+  // Отправляем лобби сразу при подключении
+  const getLobbiesList = () => Object.values(lobbies).filter(l => !l.isSolo).map(l=>({
     id:l.id,name:l.name,mode:l.mode,state:l.state,
     playerCount:Object.keys(l.players).length,maxPlayers:l.maxPlayers,wave:l.wave
-  })));
+  }));
+  socket.emit('lobbyList', getLobbiesList());
+
+  socket.on('getLobbies', () => {
+    socket.emit('lobbyList', getLobbiesList());
+  });
 
   socket.on('setName', name=>{
     if (players[socket.id]) players[socket.id].name=String(name).substring(0,15).trim()||'Player';
@@ -619,7 +624,7 @@ io.on('connection', socket => {
     if (pk.type === 'health') p.health = Math.min(100, p.health + 50);
     else p.weapon = pk.type;
 
-    pk.active = false; pk.respawnTimer = 600; // 30 sec at 20 ticks
+    pk.active = false; pk.respawnTimer = 600;
   });
 
   socket.on('takeFlag', team => {
@@ -627,7 +632,7 @@ io.on('connection', socket => {
     const lobby = lobbies[p.lobbyId]; if(!lobby || lobby.mode !== GAME_MODES.CTF) return;
     const flag = lobby.flags[team];
     if (!flag || flag.ownerId) return;
-    if (p.team === team) return; // Нельзя брать свой флаг
+    if (p.team === team) return;
     if (Math.hypot(p.x-flag.x, p.y-flag.y) > 40) return;
     flag.ownerId = p.id;
     p.hasFlag = true;
@@ -644,10 +649,7 @@ io.on('connection', socket => {
       const lobby = lobbies[p.lobbyId];
       if (lobby) {
         delete lobby.players[socket.id];
-        if (Object.keys(lobby.players).length === 0 && !lobby.isSolo) {
-          clearInterval(lobby.loopInterval); clearInterval(lobby.gameTimer); clearInterval(lobby.countdownTimer);
-          delete lobbies[p.lobbyId];
-        } else if (lobby.isSolo) {
+        if (Object.keys(lobby.players).length === 0) {
           clearInterval(lobby.loopInterval); clearInterval(lobby.gameTimer); clearInterval(lobby.countdownTimer);
           delete lobbies[p.lobbyId];
         }
