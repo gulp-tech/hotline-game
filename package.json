@@ -1,16 +1,15 @@
 {
-  "name": "hotline-game",
-  "version": "4.0.0",
-  "description": "Hotline Online Shooter",
-  "main": "server.js",
+  "name": "mc-bot",
+  "version": "1.0.0",
+  "description": "Minecraft Bot for LavaMine",
+  "main": "bot.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node bot.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2"
-  },
-  "engines": {
-    "node": "18.x"
+    "mineflayer": "^4.14.0",
+    "mineflayer-pathfinder": "^2.4.5",
+    "minecraft-data": "^3.60.0",
+    "vec3": "^0.1.10"
   }
 }
