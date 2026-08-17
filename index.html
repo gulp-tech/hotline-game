@@ -233,7 +233,9 @@ body{
     <h1>🎮 СЕРВЕРЫ</h1>
     <p id="onlineCount" style="color:var(--muted);font-size:12px;margin-top:5px;">Загрузка...</p>
   </div>
-  <div class="lobby-grid" id="lobbyGrid"></div>
+  <div class="lobby-grid" id="lobbyGrid">
+    <div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:30px">Подключение к серверу...</div>
+  </div>
   <button class="btn btn-secondary" style="max-width:200px" onclick="showScreen('menuScreen')">← НАЗАД</button>
 </div>
 
@@ -296,7 +298,7 @@ body{
 
   <div id="endScreen">
     <div class="end-box">
-      <h2 id="endTitle">ИГА ОКОНЧЕНА</h2>
+      <h2 id="endTitle">ИГРА ОКОНЧЕНА</h2>
       <div class="reason" id="endReason"></div>
       <div id="endScores"></div>
       <button class="btn btn-primary" style="margin-top:20px" onclick="leaveLobby()">ВЫЙТИ В МЕНЮ</button>
@@ -317,7 +319,9 @@ body{
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
+// ЖЕСТКО ПРОПИСЫВАЕМ WEBSOCKET ДЛЯ RENDER (решает проблему обрыва связи)
+const socket = io({ transports: ['websocket'] });
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -367,7 +371,14 @@ document.getElementById('soloBtn').onclick = () => {
 
 socket.on('lobbyList', (lobbies) => {
   const grid = document.getElementById('lobbyGrid');
+  if (!grid) return;
   document.getElementById('onlineCount').innerText = `Онлайн: ${lobbies.reduce((s,l)=>s+l.playerCount,0)} игроков`;
+  
+  if (lobbies.length === 0) {
+    grid.innerHTML = '<div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:30px">Серверы не найдены. Подождите пробуждения сервера...</div>';
+    return;
+  }
+
   grid.innerHTML = '';
   lobbies.forEach(l => {
     const card = document.createElement('div');
@@ -443,7 +454,6 @@ function updateHUD() {
     document.getElementById('waveNum').innerText = gameState.wave;
   }
 
-  // Score
   const list = document.getElementById('scoreList');
   list.innerHTML = '';
   const sorted = [...gameState.players].sort((a,b) => b.score - a.score);
@@ -487,18 +497,15 @@ function drawMap() {
   ctx.fillStyle = '#0d0d1a';
   ctx.fillRect(0, 0, 900, 600);
 
-  // Сетка
   ctx.strokeStyle = 'rgba(42,42,90,0.3)';
   ctx.lineWidth = 1;
   for(let x=0; x<900; x+=50) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,600); ctx.stroke(); }
   for(let y=0; y<600; y+=50) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(900,y); ctx.stroke(); }
 
-  // Границы
   ctx.strokeStyle = '#2a2a5a';
   ctx.lineWidth = 8;
   ctx.strokeRect(4, 4, 892, 592);
 
-  // Зона King
   if (currentLobby && currentLobby.mode === 'king') {
     ctx.fillStyle = 'rgba(204,68,255,0.1)';
     ctx.fillRect(400, 240, 100, 100);
@@ -507,7 +514,6 @@ function drawMap() {
     ctx.strokeRect(400, 240, 100, 100);
   }
 
-  // Бочки
   gameState.barrels.forEach(b => {
     ctx.fillStyle = '#883333';
     ctx.beginPath();
@@ -522,7 +528,6 @@ function drawMap() {
     ctx.fillText(b.hp, b.x, b.y+3);
   });
 
-  // Пикапы
   gameState.pickups.forEach(pk => {
     if (!pk.active) return;
     let color = '#33ff99', icon = '+';
@@ -543,15 +548,14 @@ function drawMap() {
     ctx.fillText(icon, pk.x, pk.y+5);
   });
 
-  // Флаги CTF
   if (currentLobby && currentLobby.mode === 'ctf' && gameState.flags) {
     ['red','blue'].forEach(t => {
       const f = gameState.flags[t];
       if (!f) return;
       ctx.fillStyle = t === 'red' ? '#ff3366' : '#3399ff';
-      ctx.fillRect(f.baseX-20, f.baseY-30, 40, 5); // база
+      ctx.fillRect(f.baseX-20, f.baseY-30, 40, 5);
       if (!f.ownerId) {
-        ctx.fillRect(f.x-2, f.y-20, 4, 20); // флагшток
+        ctx.fillRect(f.x-2, f.y-20, 4, 20);
         ctx.beginPath();
         ctx.moveTo(f.x+2, f.y-20);
         ctx.lineTo(f.x+15, f.y-15);
@@ -563,15 +567,13 @@ function drawMap() {
 }
 
 function drawEntities() {
-  // Пули
   gameState.bullets.forEach(b => {
-    ctx.fillStyle = b.isBot ? '#ff4444' : WEAPONS_CLIENT[b.weapon]?.color || '#ffff00';
+    ctx.fillStyle = b.isBot ? '#ff4444' : (WEAPONS_CLIENT[b.weapon]?.color || '#ffff00');
     ctx.beginPath();
     ctx.arc(b.x, b.y, 3, 0, Math.PI*2);
     ctx.fill();
   });
 
-  // Взрывы
   gameState.explosions.forEach(e => {
     ctx.fillStyle = `rgba(255,102,0,${e.life/20})`;
     ctx.beginPath();
@@ -579,12 +581,10 @@ function drawEntities() {
     ctx.fill();
   });
 
-  // Боты
   gameState.bots.forEach(b => {
     drawPlayerLike(b, b.weapon, false);
   });
 
-  // Игроки
   gameState.players.forEach(p => {
     drawPlayerLike(p, p.weapon, p.id === myId);
   });
@@ -593,14 +593,14 @@ function drawEntities() {
 function drawPlayerLike(p, weapon, isMe) {
   if (p.isDead && !isMe) return;
   
-  const color = isMe ? '#3399ff' : (p.team === 'red' ? '#ff3366' : p.team === 'blue' ? '#3399ff' : '#ff8800');
-  if (isMe) color = '#33ff99'; // Свой цвет
+  // ИСПРАВЛЕНО: используем let вместо const для смены цвета
+  let color = isMe ? '#3399ff' : (p.team === 'red' ? '#ff3366' : p.team === 'blue' ? '#3399ff' : '#ff8800');
+  if (isMe) color = '#33ff99'; // Свой цвет всегда зеленый
 
   ctx.save();
   ctx.translate(p.x, p.y);
   ctx.rotate(p.angle);
 
-  // Тело
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(0, 0, 16, 0, Math.PI*2);
@@ -609,13 +609,11 @@ function drawPlayerLike(p, weapon, isMe) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Оружие
   ctx.fillStyle = WEAPONS_CLIENT[weapon]?.color || '#fff';
   ctx.fillRect(8, -3, 16, 6);
 
   ctx.restore();
 
-  // Полоска здоровья
   if (p.health < 100) {
     ctx.fillStyle = '#330000';
     ctx.fillRect(p.x-16, p.y-25, 32, 4);
@@ -623,7 +621,6 @@ function drawPlayerLike(p, weapon, isMe) {
     ctx.fillRect(p.x-16, p.y-25, 32 * (p.health/100), 4);
   }
 
-  // Имя
   ctx.fillStyle = '#fff';
   ctx.font = '10px Courier New';
   ctx.textAlign = 'center';
@@ -663,7 +660,6 @@ function shoot() {
   socket.emit('playerShoot', { angle: myPlayer.angle, weapon: myPlayer.weapon });
 }
 
-// ПК Управление
 window.addEventListener('keydown', e => {
   keys[e.key.toLowerCase()] = true;
   if (e.key === 'r' || e.key === 'R') myPlayer.weapon = 'pistol';
@@ -685,7 +681,6 @@ canvas.addEventListener('mousemove', e => {
 canvas.addEventListener('mousedown', () => { mouse.down = true; shoot(); });
 canvas.addEventListener('mouseup', () => mouse.down = false);
 
-// Мобильный джойстик
 const joyZone = document.getElementById('joystickZone');
 const joyStick = document.getElementById('joystickStick');
 
@@ -715,7 +710,6 @@ joyZone.addEventListener('touchend', e => {
   joyStick.style.transform = 'translate(-50%, -50%)';
 });
 
-// Кнопки стрельба/нож
 document.getElementById('shootBtn').addEventListener('touchstart', e => { e.preventDefault(); shoot(); });
 document.getElementById('knifeBtn').addEventListener('touchstart', e => { 
   e.preventDefault(); 
@@ -724,7 +718,6 @@ document.getElementById('knifeBtn').addEventListener('touchstart', e => {
   setTimeout(()=> myPlayer.weapon = 'pistol', 200);
 });
 
-// Чат
 document.getElementById('chatInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     socket.emit('chat', e.target.value);
@@ -732,7 +725,6 @@ document.getElementById('chatInput').addEventListener('keydown', e => {
   }
 });
 
-// Цикл отправки позиций
 setInterval(() => {
   if (!currentLobby || myPlayer.isDead) return;
   
@@ -754,7 +746,6 @@ setInterval(() => {
     myPlayer.y = Math.max(25, Math.min(555, myPlayer.y + vy));
   }
 
-  // Угол поворот (на ПК за мышью, на мобилке за направление движения)
   if (!isMobile) {
     myPlayer.angle = Math.atan2(mouse.y - myPlayer.y, mouse.x - myPlayer.x);
   } else if (vx !== 0 || vy !== 0) {
@@ -765,14 +756,12 @@ setInterval(() => {
 
   if (mouse.down) shoot();
 
-  // Подбор пикапов
   gameState.pickups.forEach(pk => {
     if (pk.active && Math.hypot(myPlayer.x-pk.x, myPlayer.y-pk.y) < 30) {
       socket.emit('pickupItem', pk.id);
     }
   });
 
-  // Взятие флага
   if (currentLobby.mode === 'ctf' && !myPlayer.hasFlag && gameState.flags) {
     const enemyFlag = myPlayer.team === 'red' ? gameState.flags.blue : gameState.flags.red;
     if (enemyFlag && !enemyFlag.ownerId && Math.hypot(myPlayer.x-enemyFlag.x, myPlayer.y-enemyFlag.y) < 30) {
