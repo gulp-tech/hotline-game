@@ -67,7 +67,6 @@ class Bot {
       if (d<minDist) { minDist=d; closest=p; }
     });
 
-    // Анти-застревание
     if (Math.hypot(this.x-this.lastX, this.y-this.lastY) < 0.5) {
       this.stuckTimer++;
       if (this.stuckTimer>30) { this.wanderAngle+=Math.PI*(0.5+Math.random()); this.stuckTimer=0; }
@@ -78,7 +77,10 @@ class Bot {
     if (closest && minDist<500) {
       this.state='chase';
       this.angle=Math.atan2(closest.y-this.y, closest.x-this.x);
-      if (minDist>90) { this.x+=Math.cos(this.angle)*this.speed; this.y+=Math.sin(this.angle)*this.speed; }
+      if (minDist>90) { 
+        this.x+=Math.cos(this.angle)*this.speed; 
+        this.y+=Math.sin(this.angle)*this.speed; 
+      }
       const now=Date.now();
       const w=WEAPONS[this.weapon]||WEAPONS.auto;
       if (minDist<(w.melee?40:450) && now-this.lastShot>this.shootCooldown) {
@@ -110,7 +112,7 @@ class Bot {
 }
 
 // ==================== ЛОББИ ====================
-function createLobby(mode, name) {
+function createLobby(mode, name, isSolo = false) {
   const id=`lobby_${lobbyCounter++}`;
   lobbies[id]={
     id, name, mode,
@@ -121,8 +123,7 @@ function createLobby(mode, name) {
     wave:0, botIdCounter:0,
     countdownTimer:null, gameTimer:null, loopInterval:null,
     timeLeft:180, maxPlayers:8, minToStart:2, spawnIndex:0,
-    kingTimer:{},  // king of the hill
-    flags:{}       // ctf
+    kingTimer:{}, flags:{}, isSolo
   };
   return lobbies[id];
 }
@@ -134,7 +135,7 @@ createLobby(GAME_MODES.CTF,       '🏴 Захват флага #1');
 createLobby(GAME_MODES.KING,      '👑 Король горы #1');
 
 function broadcastLobbyList() {
-  const list=Object.values(lobbies).map(l=>({
+  const list=Object.values(lobbies).filter(l => !l.isSolo).map(l=>({
     id:l.id,name:l.name,mode:l.mode,state:l.state,
     playerCount:Object.keys(l.players).length,
     maxPlayers:l.maxPlayers,wave:l.wave
@@ -147,11 +148,11 @@ function getSafeSpawn(mode,index) {
   return sp[index%sp.length];
 }
 
-// ==================== CTF / KING INIT ====================
+// ==================== ИНИЦИАЛИЗАЦИЯ РЕЖИМОВ ====================
 function initCTF(lobby) {
   lobby.flags={
-    red:  {x:100,y:290,ownerId:null,returned:true,baseX:100,baseY:290},
-    blue: {x:800,y:290,ownerId:null,returned:true,baseX:800,baseY:290}
+    red:  {x:100,y:290,ownerId:null,baseX:100,baseY:290},
+    blue: {x:800,y:290,ownerId:null,baseX:800,baseY:290}
   };
 }
 function initKing(lobby) {
@@ -182,7 +183,7 @@ function startCountdown(lobbyId) {
   const lobby=lobbies[lobbyId];
   if (!lobby||lobby.state!==LOBBY_STATES.WAITING) return;
   lobby.state=LOBBY_STATES.COUNTDOWN;
-  let count=20;
+  let count = lobby.isSolo ? 3 : 20;
   io.to(lobbyId).emit('countdown',{seconds:count});
   lobby.countdownTimer=setInterval(()=>{
     count--;
@@ -196,14 +197,12 @@ function startGame(lobbyId) {
   lobby.state=LOBBY_STATES.PLAYING;
   lobby.wave=1; lobby.timeLeft=180; lobby.spawnIndex=0;
 
-  // Спектаторы
   Object.values(players).forEach(p=>{
     if (p.lobbyId===lobbyId&&!lobby.players[p.id]) {
       lobby.spectators[p.id]=p; io.to(p.id).emit('becameSpectator');
     }
   });
 
-  // Расставить игроков
   let pi=0;
   Object.values(lobby.players).forEach(p=>{
     const sp=getSafeSpawn(lobby.mode,pi);
@@ -215,25 +214,19 @@ function startGame(lobbyId) {
     pi++;
   });
 
-  // Инициализация режимов
   if (lobby.mode===GAME_MODES.CTF)  initCTF(lobby);
   if (lobby.mode===GAME_MODES.KING) initKing(lobby);
   initBarrels(lobby);
   spawnPickups(lobby);
 
   io.to(lobbyId).emit('gameStarted',{
-    mode:lobby.mode, players:lobby.players,
-    wave:lobby.wave, pickups:lobby.pickups,
-    barrels:lobby.barrels,
-    flags:lobby.flags||null,
-    kingZone:lobby.kingZone||null
+    mode:lobby.mode, wave:lobby.wave, 
+    flags:lobby.flags||null, kingZone:lobby.kingZone||null
   });
 
   if (lobby.mode!==GAME_MODES.SURVIVAL) {
     lobby.gameTimer=setInterval(()=>{
       lobby.timeLeft--;
-      io.to(lobbyId).emit('timerUpdate',{timeLeft:lobby.timeLeft});
-      // Король горы — накапливаем очки
       if (lobby.mode===GAME_MODES.KING) updateKingScore(lobby,lobbyId);
       if (lobby.timeLeft<=0) { clearInterval(lobby.gameTimer); endGame(lobbyId,'⏱️ Время вышло!'); }
     },1000);
@@ -253,7 +246,6 @@ function updateKingScore(lobby, lobbyId) {
       if (lobby.kingScore[p.team]>=30) endGame(lobbyId,`${p.team==='red'?'🔴':'🔵'} команда захватила гору!`);
     }
   });
-  io.to(lobbyId).emit('kingScore',lobby.kingScore);
 }
 
 function spawnWave(lobbyId) {
@@ -263,7 +255,7 @@ function spawnWave(lobbyId) {
   const weapons=['pistol','auto','shotgun','sniper'];
   for (let i=0;i<count;i++) {
     setTimeout(()=>{
-      if (!lobbies[lobbyId]) return;
+      if (!lobbies[lobbyId] || lobby.state !== LOBBY_STATES.PLAYING) return;
       const botId=`bot_${lobbyId}_${lobby.botIdCounter++}`;
       const bot=new Bot(botId,lobbyId);
       const side=Math.floor(Math.random()*4);
@@ -276,10 +268,6 @@ function spawnWave(lobbyId) {
       bot.speed=Math.min(3.8,1.2+lobby.wave*0.22);
       bot.weapon=weapons[Math.min(lobby.wave-1,weapons.length-1)];
       lobby.bots[botId]=bot;
-      io.to(lobbyId).emit('botSpawned',{
-        id:botId,x:bot.x,y:bot.y,health:bot.health,
-        maxHealth:bot.maxHealth,name:bot.name,wave:bot.wave,weapon:bot.weapon
-      });
     },i*500);
   }
 }
@@ -305,14 +293,12 @@ function startGameLoop(lobbyId) {
           velY:Math.sin(action.bullet.angle)*action.bullet.speed,
           life:90};
         lobby.bullets.push(b);
-        io.to(lobbyId).emit('bulletCreated',action.bullet);
       }
       if (action.type==='melee') {
         const target=lobby.players[action.targetId];
         if (target&&!target.isDead) {
           target.health-=action.damage;
           if (target.health<=0) killPlayer(lobby,lobbyId,target,bot.id,bot.name);
-          else io.to(lobbyId).emit('playerHurt',{id:target.id,health:target.health});
         }
       }
     });
@@ -333,9 +319,6 @@ function startGameLoop(lobbyId) {
           if (bar.hp<=0) {
             createExplosion(lobby,lobbyId,bar.x,bar.y,80,50);
             lobby.barrels.splice(bi,1);
-            io.to(lobbyId).emit('barrelDestroyed',{id:bar.id,x:bar.x,y:bar.y});
-          } else {
-            io.to(lobbyId).emit('barrelHurt',{id:bar.id,hp:bar.hp});
           }
           lobby.bullets.splice(i,1); removed=true; break;
         }
@@ -353,7 +336,6 @@ function startGameLoop(lobbyId) {
             else {
               p.health-=b.damage||20;
               if (p.health<=0) killPlayer(lobby,lobbyId,p,b.ownerId,b.ownerName);
-              else io.to(lobbyId).emit('playerHurt',{id:p.id,health:p.health});
             }
           }
         });
@@ -372,13 +354,15 @@ function startGameLoop(lobbyId) {
               bot.health-=b.damage||25;
               if (bot.health<=0) {
                 const shooter=lobby.players[b.ownerId];
-                if (shooter) { shooter.score=(shooter.score||0)+1; shooter.kills=(shooter.kills||0)+1; addXP(shooter,50+lobby.wave*10); io.to(lobbyId).emit('updateScore',{id:shooter.id,score:shooter.score,kills:shooter.kills,xp:shooter.xp,level:shooter.level}); }
-                io.to(lobbyId).emit('botDied',{id:bot.id,x:bot.x,y:bot.y});
+                if (shooter) { 
+                  shooter.score=(shooter.score||0)+1; shooter.kills=(shooter.kills||0)+1; 
+                  addXP(shooter,50+lobby.wave*10); 
+                }
                 delete lobby.bots[bot.id];
                 if (Object.keys(lobby.bots).length===0&&lobby.mode===GAME_MODES.SURVIVAL) {
                   lobby.wave++; setTimeout(()=>spawnWave(lobbyId),3000);
                 }
-              } else io.to(lobbyId).emit('botHurt',{id:bot.id,health:bot.health});
+              }
             }
           }
         });
@@ -396,7 +380,7 @@ function startGameLoop(lobbyId) {
     lobby.pickups.forEach(pk=>{
       if (!pk.active) {
         pk.respawnTimer-=dt;
-        if (pk.respawnTimer<=0) { pk.active=true; io.to(lobbyId).emit('pickupRespawned',{id:pk.id}); }
+        if (pk.respawnTimer<=0) pk.active=true; 
       }
     });
 
@@ -406,30 +390,42 @@ function startGameLoop(lobbyId) {
         if (flag.ownerId) {
           const carrier=lobby.players[flag.ownerId];
           if (!carrier||carrier.isDead) {
-            // Бросить флаг
             if (carrier) { flag.x=carrier.x; flag.y=carrier.y; }
             flag.ownerId=null;
-            io.to(lobbyId).emit('flagDropped',{team,x:flag.x,y:flag.y});
           } else {
             flag.x=carrier.x; flag.y=carrier.y;
+            // Проверка доставки
+            if (carrier.team === team && Math.hypot(carrier.x-flag.baseX, carrier.y-flag.baseY) < 40) {
+                lobby.kingScore[team] = (lobby.kingScore[team]||0) + 1;
+                flag.ownerId = null;
+                flag.x = flag.baseX; flag.y = flag.baseY;
+                carrier.hasFlag = false;
+                if(lobby.kingScore[team] >= 3) endGame(lobbyId, `${team==='red'?'🔴':'🔵'} команда захватила 3 флага!`);
+            }
           }
         }
       });
     }
 
-    // --- Позиции ботов ---
-    const botData={};
-    Object.values(lobby.bots).forEach(b=>{
-      botData[b.id]={x:Math.round(b.x),y:Math.round(b.y),angle:+b.angle.toFixed(3),health:b.health};
-    });
-    if (Object.keys(botData).length) io.to(lobbyId).emit('botsUpdate',botData);
+    // --- ОТПРАВКА СОСТОЯНИЯ (ОПТИМИЗИРОВАНО) ---
+    const state = {
+      players: Object.values(lobby.players).map(p => ({id:p.id, x:p.x, y:p.y, angle:p.angle, health:p.health, isDead:p.isDead, score:p.score, kills:p.kills, weapon:p.weapon, team:p.team, name:p.name, hasFlag:p.hasFlag, level:p.level})),
+      bots: Object.values(lobby.bots).map(b => ({id:b.id, x:b.x, y:b.y, angle:b.angle, health:b.health, weapon:b.weapon})),
+      bullets: lobby.bullets.map(b => ({id:b.id, x:b.x, y:b.y, isBot:b.isBot})),
+      explosions: lobby.explosions,
+      barrels: lobby.barrels,
+      pickups: lobby.pickups,
+      flags: lobby.flags,
+      kingScore: lobby.kingScore,
+      wave: lobby.wave
+    };
+    io.to(lobbyId).emit('state', state);
 
   },50);
 }
 
 function createExplosion(lobby,lobbyId,x,y,radius,damage) {
-  io.to(lobbyId).emit('explosion',{x,y,radius});
-  // Урон по зоне
+  lobby.explosions.push({x,y,radius,life:20});
   Object.values(lobby.players).forEach(p=>{
     if (p.isDead) return;
     const d=Math.hypot(p.x-x,p.y-y);
@@ -437,7 +433,6 @@ function createExplosion(lobby,lobbyId,x,y,radius,damage) {
       const dmg=Math.round(damage*(1-d/radius));
       p.health-=dmg;
       if (p.health<=0) killPlayer(lobby,lobbyId,p,'explosion','💥');
-      else io.to(lobbyId).emit('playerHurt',{id:p.id,health:p.health});
     }
   });
   Object.values(lobby.bots).forEach(bot=>{
@@ -449,13 +444,11 @@ function createExplosion(lobby,lobbyId,x,y,radius,damage) {
 function killPlayer(lobby,lobbyId,target,killerId,killerName) {
   target.health=0; target.isDead=true; target.deaths=(target.deaths||0)+1;
   if (target.hasFlag) {
-    // Бросить флаг CTF
     Object.entries(lobby.flags||{}).forEach(([team,flag])=>{
-      if (flag.ownerId===target.id) { flag.ownerId=null; flag.x=target.x; flag.y=target.y; io.to(lobbyId).emit('flagDropped',{team,x:flag.x,y:flag.y}); }
+      if (flag.ownerId===target.id) { flag.ownerId=null; flag.x=target.x; flag.y=target.y; }
     });
     target.hasFlag=false;
   }
-  io.to(lobbyId).emit('playerDied',{deadId:target.id,killerId,killerName});
 
   if (lobby.mode!==GAME_MODES.SURVIVAL) setTimeout(()=>respawnPlayer(lobbyId,target.id),3000);
   else checkSurvivalEnd(lobby,lobbyId);
@@ -480,7 +473,6 @@ function respawnPlayer(lobbyId,pid) {
   const p=lobby.players[pid]; if (!p||!p.isDead) return;
   const sp=getSafeSpawn(lobby.mode,lobby.spawnIndex++);
   p.health=100; p.isDead=false; p.x=sp.x; p.y=sp.y; p.weapon='pistol';
-  io.to(lobbyId).emit('playerRespawned',{id:pid,x:p.x,y:p.y});
 }
 
 function addXP(player, amount) {
@@ -504,8 +496,8 @@ function endGame(lobbyId,reason) {
 
   setTimeout(()=>{
     if (!lobbies[lobbyId]) return;
+    if (lobby.isSolo) { delete lobbies[lobbyId]; return; }
     Object.assign(lobby,{state:LOBBY_STATES.WAITING,players:{},spectators:{},bots:{},bullets:[],pickups:[],barrels:[],wave:0,spawnIndex:0,flags:{},kingScore:{}});
-    io.to(lobbyId).emit('lobbyReset');
     broadcastLobbyList();
   },12000);
 }
@@ -521,10 +513,10 @@ io.on('connection', socket => {
     color:`hsl(${Math.floor(Math.random()*360)},65%,60%)`,
     lobbyId:null, isDead:false, team:null,
     weapon:'pistol', hasFlag:false,
-    xp:0, level:1
+    xp:0, level:1, lastShot:0
   };
 
-  socket.emit('lobbyList',Object.values(lobbies).map(l=>({
+  socket.emit('lobbyList',Object.values(lobbies).filter(l => !l.isSolo).map(l=>({
     id:l.id,name:l.name,mode:l.mode,state:l.state,
     playerCount:Object.keys(l.players).length,maxPlayers:l.maxPlayers,wave:l.wave
   })));
@@ -535,157 +527,21 @@ io.on('connection', socket => {
 
   socket.on('joinLobby', lobbyId=>{
     const lobby=lobbies[lobbyId], player=players[socket.id];
-    if (!lobby||!player) return;
-    if (player.lobbyId) leaveCurrentLobby(socket);
+    if (!lobby||!player||lobby.isSolo) return;
+    
+    if (Object.keys(lobby.players).length >= lobby.maxPlayers) return;
+
     player.lobbyId=lobbyId;
     socket.join(lobbyId);
+    lobby.players[socket.id]=player;
 
-    if (lobby.state===LOBBY_STATES.PLAYING) {
-      lobby.spectators[socket.id]=player;
-      socket.emit('becameSpectator');
-      socket.emit('gameStarted',{mode:lobby.mode,players:lobby.players,wave:lobby.wave,pickups:lobby.pickups,barrels:lobby.barrels,flags:lobby.flags||null,kingZone:lobby.kingZone||null});
-    } else {
-      const sp=getSafeSpawn(lobby.mode,Object.keys(lobby.players).length);
-      player.x=sp.x; player.y=sp.y; player.health=100; player.isDead=false; player.weapon='pistol';
-      lobby.players[socket.id]=player;
-      socket.emit('joinedLobby',{lobbyId,myId:socket.id,lobby:{mode:lobby.mode,state:lobby.state,name:lobby.name,players:lobby.players}});
-      socket.to(lobbyId).emit('playerJoined',player);
-      if (Object.keys(lobby.players).length>=lobby.minToStart&&lobby.state===LOBBY_STATES.WAITING) startCountdown(lobbyId);
+    if (lobby.state===LOBBY_STATES.WAITING && Object.keys(lobby.players).length >= lobby.minToStart) {
+      startCountdown(lobbyId);
     }
+
     broadcastLobbyList();
+    socket.emit('joinedLobby', {lobbyId: lobbyId, mode: lobby.mode, name: lobby.name});
   });
 
-  socket.on('leaveLobby',()=>leaveCurrentLobby(socket));
-
-  socket.on('move', data=>{
-    const p=players[socket.id]; if (!p?.lobbyId) return;
-    const lobby=lobbies[p.lobbyId]; if (!lobby||lobby.state!==LOBBY_STATES.PLAYING||p.isDead) return;
-    p.x=Math.max(20,Math.min(880,+data.x||p.x));
-    p.y=Math.max(20,Math.min(560,+data.y||p.y));
-    p.angle=+data.angle||0;
-    socket.to(p.lobbyId).emit('playerMoved',{id:socket.id,x:p.x,y:p.y,angle:p.angle,weapon:p.weapon});
-
-    // Подбор пикапов
-    const lobby2=lobbies[p.lobbyId];
-    lobby2.pickups.forEach(pk=>{
-      if (!pk.active) return;
-      if (Math.hypot(pk.x-p.x,pk.y-p.y)<24) {
-        pk.active=false; pk.respawnTimer=15*20; // 15 сек
-        if (pk.type==='health') { p.health=Math.min(100,p.health+40); io.to(p.lobbyId).emit('playerHurt',{id:p.id,health:p.health}); }
-        else { p.weapon=pk.type; }
-        io.to(p.lobbyId).emit('pickupTaken',{id:pk.id,playerId:p.id,type:pk.type});
-      }
-    });
-
-    // CTF: подбор / возврат флага
-    if (lobby2.mode===GAME_MODES.CTF&&lobby2.flags) {
-      Object.entries(lobby2.flags).forEach(([team,flag])=>{
-        if (!flag.ownerId&&flag.returned===false&&Math.hypot(flag.x-p.x,flag.y-p.y)<28) {
-          // Вернуть свой флаг
-          if (p.team===team) {
-            flag.x=flag.baseX; flag.y=flag.baseY; flag.returned=true;
-            io.to(p.lobbyId).emit('flagReturned',{team,byId:p.id});
-          }
-        }
-        if (!flag.ownerId&&p.team!==team&&Math.hypot(flag.x-p.x,flag.y-p.y)<28) {
-          flag.ownerId=p.id; p.hasFlag=true; flag.returned=false;
-          io.to(p.lobbyId).emit('flagPickup',{team,byId:p.id,byName:p.name});
-        }
-        // Доставка флага
-        if (flag.ownerId===p.id) {
-          const myFlag=lobby2.flags[p.team];
-          if (myFlag&&myFlag.returned&&Math.hypot(myFlag.baseX-p.x,myFlag.baseY-p.y)<40) {
-            p.score=(p.score||0)+3; p.kills=(p.kills||0)+1; p.hasFlag=false;
-            flag.ownerId=null; flag.x=flag.baseX; flag.y=flag.baseY; flag.returned=true;
-            addXP(p,150);
-            io.to(p.lobbyId).emit('flagCaptured',{team,byId:p.id,byName:p.name});
-            io.to(p.lobbyId).emit('updateScore',{id:p.id,score:p.score,kills:p.kills,xp:p.xp,level:p.level});
-            if (p.score>=3) endGame(p.lobbyId,`${p.team==='red'?'🔴':'🔵'} команда захватила 3 флага!`);
-          }
-        }
-      });
-    }
-  });
-
-  socket.on('shoot', data=>{
-    const p=players[socket.id]; if (!p?.lobbyId) return;
-    const lobby=lobbies[p.lobbyId]; if (!lobby||lobby.state!==LOBBY_STATES.PLAYING||p.isDead) return;
-    const w=WEAPONS[p.weapon]||WEAPONS.pistol;
-    if (w.melee) return;
-
-    const bulletBase={ownerId:socket.id,ownerName:p.name,ownerTeam:p.team,isBot:false,speed:w.speed,damage:w.damage,weapon:p.weapon,explosive:w.explosive||false};
-    for (let i=0;i<w.bullets;i++) {
-      const spread=(Math.random()-0.5)*w.spread*2;
-      const bullet={...bulletBase,id:`${socket.id}_${Date.now()}_${i}`,x:+data.x||p.x,y:+data.y||p.y,angle:(+data.angle||0)+spread};
-      lobby.bullets.push({...bullet,velX:Math.cos(bullet.angle)*bullet.speed,velY:Math.sin(bullet.angle)*bullet.speed,life:90});
-      io.to(p.lobbyId).emit('bulletCreated',bullet);
-    }
-  });
-
-  socket.on('meleeAttack', ()=>{
-    const p=players[socket.id]; if (!p?.lobbyId) return;
-    const lobby=lobbies[p.lobbyId]; if (!lobby||lobby.state!==LOBBY_STATES.PLAYING||p.isDead) return;
-    const w=WEAPONS[p.weapon]; if (!w?.melee) return;
-    Object.values(lobby.players).forEach(t=>{
-      if (t.id===socket.id||t.isDead) return;
-      if (lobby.mode===GAME_MODES.TEAM&&t.team===p.team) return;
-      if (Math.hypot(t.x-p.x,t.y-p.y)<w.range) {
-        t.health-=w.damage;
-        if (t.health<=0) killPlayer(lobby,p.lobbyId,t,socket.id,p.name);
-        else io.to(p.lobbyId).emit('playerHurt',{id:t.id,health:t.health});
-      }
-    });
-    io.to(p.lobbyId).emit('meleeEffect',{x:p.x,y:p.y,angle:p.angle});
-  });
-
-  socket.on('hitPlayer', data=>{
-    const p=players[socket.id]; if (!p?.lobbyId) return;
-    const lobby=lobbies[p.lobbyId]; if (!lobby||lobby.state!==LOBBY_STATES.PLAYING) return;
-    const target=lobby.players[data.targetId]; if (!target||target.isDead) return;
-    if (lobby.mode===GAME_MODES.TEAM&&target.team===p.team) return;
-    const w=WEAPONS[p.weapon]||WEAPONS.pistol;
-    target.health-=data.damage||w.damage;
-    if (target.health<=0) {
-      p.score=(p.score||0)+1; p.kills=(p.kills||0)+1; addXP(p,100);
-      io.to(p.lobbyId).emit('updateScore',{id:p.id,score:p.score,kills:p.kills,xp:p.xp,level:p.level});
-      killPlayer(lobby,p.lobbyId,target,socket.id,p.name);
-    } else io.to(p.lobbyId).emit('playerHurt',{id:target.id,health:target.health});
-  });
-
-  socket.on('chatMessage', msg=>{
-    const p=players[socket.id]; if (!p?.lobbyId) return;
-    const text=String(msg).substring(0,80).trim(); if (!text) return;
-    io.to(p.lobbyId).emit('chatMessage',{name:p.name,text,color:p.color,team:p.team});
-  });
-
-  socket.on('quickPhrase', idx=>{
-    const phrases=['👍 GG!','🔥 Nice!','🆘 Help!','😂 LOL','💀 RIP','🎯 Headshot!'];
-    const p=players[socket.id]; if (!p?.lobbyId) return;
-    io.to(p.lobbyId).emit('quickPhrase',{id:socket.id,text:phrases[idx]||'👍'});
-  });
-
-  socket.on('disconnect',()=>{
-    console.log('-',socket.id);
-    leaveCurrentLobby(socket);
-    delete players[socket.id];
-    broadcastLobbyList();
-  });
-
-  function leaveCurrentLobby(socket) {
-    const p=players[socket.id]; if (!p?.lobbyId) return;
-    const lobbyId=p.lobbyId, lobby=lobbies[lobbyId];
-    if (lobby) {
-      delete lobby.players[socket.id]; delete lobby.spectators[socket.id];
-      socket.to(lobbyId).emit('playerLeft',socket.id);
-      if (lobby.state===LOBBY_STATES.COUNTDOWN&&Object.keys(lobby.players).length<lobby.minToStart) {
-        clearInterval(lobby.countdownTimer); lobby.state=LOBBY_STATES.WAITING;
-        io.to(lobbyId).emit('countdownCancelled');
-      }
-    }
-    socket.leave(lobbyId); p.lobbyId=null;
-    broadcastLobbyList();
-  }
-});
-
-const PORT=process.env.PORT||3000;
-server.listen(PORT,()=>console.log(`🚀 Порт ${PORT}`));
+  socket.on('startSolo', () => {
+    const player=players[socket.id]
